@@ -43,11 +43,12 @@ This document details the technical architecture, design decisions, and implemen
 
 ### Core Workflow
 
-1. **Room Creation**: Sender creates a room, gets a 6-digit pickup code
+1. **Room Creation**: Sender creates a room, gets an 8-digit pickup code
 2. **Signaling Exchange**: Both parties exchange SDP and ICE candidates via WebSocket
-3. **P2P Connection**: WebRTC establishes peer-to-peer connection
-4. **File Transfer**: Transfer file data via DataChannel
-5. **Auto Cleanup**: Room automatically expires after 1 hour
+3. **P2P Connection**: WebRTC establishes peer-to-peer connection with multiple STUN servers
+4. **File Transfer**: Transfer file data via DataChannel (streaming mode for large files)
+5. **Auto Cleanup**: Room automatically expires after 5 minutes of inactivity
+6. **Keep-Alive**: WebSocket heartbeat and auto-reconnect maintain connection stability
 
 ## 🏗️ Technology Stack
 

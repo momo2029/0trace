@@ -1,6 +1,6 @@
 # 0trace
 
-> Zero-Privacy P2P File Transfer - WebRTC-based peer-to-peer file sharing
+> Zero-Trace P2P File Transfer - WebRTC-based peer-to-peer file sharing
 
 [![Demo](https://img.shields.io/badge/demo-0trace.org-blue)](https://0trace.org)
 [![GitHub](https://img.shields.io/badge/github-momo2029/0trace-green)](https://github.com/momo2029/0trace)
@@ -10,12 +10,16 @@
 
 ## ✨ Features
 
-- 🔒 **Zero Privacy** - Files transferred via WebRTC P2P, server stores nothing
+- 🔒 **Zero Trace** - Files transferred via WebRTC P2P, server stores nothing
 - 🚀 **Ultra Lightweight** - Rust backend < 5MB, pure JavaScript frontend, no frameworks
 - 📦 **Ready to Use** - Open in browser, no registration or installation needed
 - 🌐 **Cross-Network** - NAT traversal supported, not limited to LAN
 - 🌍 **Multilingual** - Chinese, English, Japanese, Korean, Spanish, French
-- ⚡ **Real-time Progress** - 256KB chunked transfer with live progress
+- ⚡ **Real-time Progress** - Live transfer speed display (MB/s) with progress tracking
+- 📱 **QR Code Sharing** - Scan QR code on desktop for instant mobile access
+- 💾 **Large File Support** - Streaming transfer up to 10GB+ using File System Access API
+- 🔄 **Auto-Reconnect** - Connection keep-alive with automatic recovery on network issues
+- 📋 **File Management** - Add/remove files without changing room code
 
 ## 🚀 Quick Start
 
@@ -41,7 +45,7 @@ git clone https://github.com/momo2029/0trace
 cd 0trace
 
 # Run (requires Rust 1.75+)
-make dev
+./dev.sh
 ```
 
 ## 📖 Usage
@@ -51,8 +55,9 @@ make dev
 1. Open [0trace.org](https://0trace.org)
 2. Select "Send Files" tab
 3. Click or drag-drop files/folders
-4. Click "Copy Link"
-5. Share the link with receiver (WeChat/QQ/Email/etc.)
+4. Manage file list: add more files or remove unwanted ones
+5. Copy link or scan QR code
+6. Share with receiver (WeChat/QQ/Email/etc.)
 
 ### Receive Files
 
@@ -60,10 +65,14 @@ make dev
 - Receiver clicks the shared link
 - Auto-receives, no manual steps needed
 
-**Method 2: Manual Entry**
+**Method 2: Scan QR Code**
+- Scan QR code with mobile device
+- Opens directly in browser
+
+**Method 3: Manual Entry**
 - Select "Receive Files" tab
-- Enter 6-digit pickup code
-- Click "Join Room"
+- Enter 8-digit pickup code in split input boxes
+- Auto-joins room when all digits entered
 
 ## 🏗️ Architecture
 
@@ -75,8 +84,9 @@ Sender ←── WebSocket Signaling ──→ Rust Backend ←── WebSocket 
 
 **Tech Stack:**
 - Backend: Rust + Axum + Tokio + WebSocket
-- Frontend: Vanilla JavaScript + WebRTC API
+- Frontend: Vanilla JavaScript + WebRTC API + File System Access API
 - Protocol: WebRTC DataChannel + Custom Transfer Protocol
+- Connection: Multiple STUN servers (Google, Cloudflare, QQ) with auto-reconnect
 
 See [ARCHITECTURE.md](ARCHITECTURE.md) for details
 
@@ -84,14 +94,28 @@ See [ARCHITECTURE.md](ARCHITECTURE.md) for details
 
 - ✅ WebRTC provides built-in DTLS/SRTP encryption
 - ✅ Zero data retention on server (signaling only)
-- ✅ Pickup code space 34^6 ≈ 1.5 billion combinations
-- ✅ Room auto-expires after 1 hour
+- ✅ Pickup code space 10^8 = 100 million combinations
+- ✅ Room auto-expires after 5 minutes of inactivity
+- ✅ Connection keep-alive with heartbeat mechanism
 
 ## ⚠️ Limitations
 
 - Max 2 people per room (1 sender + 1 receiver)
-- File size limited by browser memory
+- Large files (>100MB) require Chrome/Edge 86+ for streaming mode
 - Symmetric NAT requires TURN server (not configured by default)
+
+## 🆕 Recent Updates
+
+### v2.0 (Latest)
+- Changed room code from 6-char alphanumeric to 8-digit numbers
+- Added split input boxes with auto-focus and paste support
+- Implemented streaming file transfer for 10GB+ files
+- Added real-time transfer speed display
+- Added QR code sticker for mobile sharing
+- Implemented file list management
+- Added WebSocket heartbeat and auto-reconnect
+- Added WebRTC ICE restart on connection failure
+- Optimized mobile responsive design
 
 ## 🛠️ Development
 
@@ -113,6 +137,10 @@ make build
 [MIT License](LICENSE)
 
 ## 🙏 Acknowledgments
+
+- WebRTC technology for P2P communication
+- QRCode.js for QR code generation
+- Rust community for excellent tooling
 
 ## 🤝 Contributing
 
