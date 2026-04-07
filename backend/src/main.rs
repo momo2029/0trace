@@ -48,7 +48,7 @@ async fn main() {
         .route("/api/create-room", post(create_room_handler))
         .route("/api/room-info", get(room_info_handler))
         .route("/api/ws", get(ws_handler))
-        .nest_service("/static", ServeDir::new("backend/static"))
+        .nest_service("/static", ServeDir::new("frontend/static"))
         .layer(CorsLayer::permissive())
         .with_state(state);
 

@@ -4,7 +4,7 @@ WORKDIR /app
 
 COPY shared shared
 COPY backend backend
-COPY frontend/static backend/static
+COPY frontend frontend
 
 RUN cargo build --release --manifest-path backend/Cargo.toml
 
@@ -17,7 +17,7 @@ RUN apt-get update && \
 WORKDIR /app
 
 COPY --from=builder /app/backend/target/release/backend /app/backend
-COPY --from=builder /app/backend/static /app/static
+COPY --from=builder /app/frontend/static /app/frontend/static
 
 EXPOSE 2029
 
