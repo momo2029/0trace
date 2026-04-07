@@ -1,7 +1,7 @@
 {
   "app": {
     "title": "0trace",
-    "subtitle": "제로 프라이버시 · P2P · 등록 불필요"
+    "subtitle": "프라이버시 제로 · P2P · 등록 불필요"
   },
   "tabs": {
     "send": "파일 전송",
