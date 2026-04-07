@@ -15,7 +15,7 @@ fi
 # 启动热更新服务
 echo "🔥 启动热更新服务..."
 echo "📝 监听文件变化：backend/src/**/*.rs, shared/src/**/*.rs"
-echo "🌐 服务地址：http://localhost:3000"
+echo "🌐 服务地址：http://localhost:2029"
 echo ""
 echo "按 Ctrl+C 停止服务"
 echo ""

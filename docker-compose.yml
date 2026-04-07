@@ -4,12 +4,12 @@ services:
     container_name: 0trace
     restart: unless-stopped
     ports:
-      - "3100:3000"
+      - "2029:2029"
     environment:
       - TZ=Asia/Shanghai
       - RUST_LOG=info
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000/"]
+      test: ["CMD", "curl", "-f", "http://localhost:2029/"]
       interval: 10s
       timeout: 5s
       retries: 3

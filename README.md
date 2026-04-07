@@ -28,10 +28,10 @@
 **方式一：Docker（推荐）**
 
 ```bash
-docker run -d -p 3000:3000 momo2029/0trace
+docker run -d -p 2029:2029 momo2029/0trace
 ```
 
-访问 http://localhost:3000
+访问 http://localhost:2029
 
 **方式二：从源码编译**
 

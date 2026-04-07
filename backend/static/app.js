@@ -644,7 +644,7 @@ class App {
         setTimeout(() => {
             toast.style.animation = 'slideInRight 0.3s ease reverse';
             setTimeout(() => toast.remove(), 300);
-        }, 3000);
+        }, 2029);
     }
 }
 
