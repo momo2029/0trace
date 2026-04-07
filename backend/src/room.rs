@@ -1,4 +1,3 @@
-use axum::extract::ws::WebSocket;
 use shared::{Role, RoomStatus};
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -9,6 +8,7 @@ pub type Tx = mpsc::UnboundedSender<String>;
 
 /// 房间内的客户端
 pub struct Client {
+    #[allow(dead_code)]
     pub role: Role,
     pub tx: Tx,
 }

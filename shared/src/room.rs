@@ -13,7 +13,7 @@ pub struct RoomStatus {
 pub fn generate_room_code() -> String {
     use std::time::{SystemTime, UNIX_EPOCH};
 
-    const CHARS: &[u8] = b"123456789ABCDEFGHIJKLMNPQRSTUVWXYZ";
+    const CHARS: &[u8] = b"23456789ABCDEFGHJKMNPQRSTUVWXYZ";
     let mut code = String::with_capacity(6);
 
     let seed = SystemTime::now()
