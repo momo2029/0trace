@@ -1,0 +1,75 @@
+{
+  "app": {
+    "title": "0trace",
+    "subtitle": "제로 프라이버시 · P2P · 등록 불필요"
+  },
+  "tabs": {
+    "send": "파일 전송",
+    "receive": "파일 수신"
+  },
+  "send": {
+    "notice": "중요: 수신자가 다운로드를 완료할 때까지 이 페이지를 열어두세요. 파일 전송을 위해 양측 모두 온라인 상태여야 합니다.",
+    "dragDrop": "파일/폴더를 여기에 드래그",
+    "selectFile": "파일 선택",
+    "selectFolder": "폴더 선택",
+    "fileSelected": "선택됨",
+    "fileSize": "크기",
+    "filesCount": "개 파일",
+    "shareLink": "공유 링크",
+    "copyLink": "링크 복사",
+    "linkHint": "수신자에게 링크를 보내면 자동으로 수신할 수 있습니다",
+    "connectionStatus": "연결 상태",
+    "waiting": "수신자 대기 중...",
+    "connecting": "연결 중...",
+    "connected": "연결됨, 전송 중...",
+    "disconnected": "연결 끊김",
+    "failed": "연결 실패",
+    "progress": "전송 진행률",
+    "linkCopied": "공유 링크가 복사되었습니다! 수신자에게 보내서 전송을 시작하세요",
+    "allFilesSent": "모든 파일 전송이 완료되었습니다!",
+    "createRoomFailed": "방 생성 실패",
+    "folderDragNotSupported": "폴더 드래그는 지원되지 않습니다. '폴더 선택' 버튼을 사용하세요"
+  },
+  "receive": {
+    "notice": "팁: 링크를 받으면 즉시 여세요. 발신자는 온라인 상태를 유지해야 합니다.",
+    "enterCode": "코드 입력",
+    "codePlaceholder": "6자리 코드",
+    "joinRoom": "방 참가",
+    "fileName": "파일 이름",
+    "receiving": "수신 중...",
+    "complete": "파일 수신이 완료되었습니다!"
+  },
+  "footer": {
+    "tech": "WebRTC P2P 기술 기반 · 서버는 파일을 저장하지 않습니다",
+    "privacy": "개인정보 보호정책",
+    "terms": "이용약관",
+    "github": "GitHub"
+  },
+  "privacy": {
+    "title": "개인정보 보호정책",
+    "dataProcessing": "데이터 처리",
+    "dataProcessingText": "0trace는 WebRTC 피어투피어 기술을 사용하여 파일을 전송합니다. 모든 파일은 서버를 거치지 않고 귀하의 기기와 수신자의 기기 간에 직접 전송됩니다. 당사의 서버는 연결 설정(시그널링)에만 사용되며 파일 내용을 저장, 조회 또는 기록하지 않습니다.",
+    "noTracking": "추적 없음",
+    "noTrackingText": "당사는 분석 도구, 쿠키 또는 추적 기술을 사용하지 않습니다. 개인 정보, IP 주소 또는 사용 데이터를 수집하지 않습니다.",
+    "security": "보안",
+    "securityText": "파일 전송은 WebRTC 암호화 연결(DTLS/SRTP)을 사용합니다. 그러나 공유 링크를 가진 사람은 누구나 파일을 받을 수 있으므로 링크 공유 시 주의하시기 바랍니다."
+  },
+  "terms": {
+    "title": "이용약관",
+    "prohibited": "금지 행위",
+    "prohibitedText": "본 서비스를 사용하여 불법적이거나 침해적이거나 유해하거나 위협적이거나 학대적이거나 괴롭히거나 명예를 훼손하거나 저속하거나 음란하거나 기타 불쾌한 콘텐츠를 전송하는 것은 엄격히 금지됩니다. 다음을 포함하되 이에 국한되지 않습니다:",
+    "prohibited1": "저작권, 상표 또는 기타 지적 재산권을 침해하는 콘텐츠",
+    "prohibited2": "아동 포르노 또는 모든 형태의 불법 포르노 콘텐츠",
+    "prohibited3": "악성 코드, 바이러스 또는 기타 유해한 코드",
+    "prohibited4": "적용 가능한 법률 또는 규정을 위반하는 콘텐츠",
+    "disclaimer": "면책 조항",
+    "disclaimerText": "본 서비스는 명시적 또는 묵시적 보증 없이 \"있는 그대로\" 제공됩니다. 당사는 서비스의 가용성, 신뢰성 또는 적합성에 대해 어떠한 보증도 하지 않습니다.",
+    "liability": "책임의 제한",
+    "liabilityText": "본 프로젝트는 기술 서비스만 제공하는 오픈 소스 무료 도구입니다. 사용자는 전송하는 콘텐츠에 대해 전적으로 책임을 집니다. 당사는 본 서비스 사용으로 인해 발생하는 직접적, 간접적, 우발적, 특별 또는 결과적 손해에 대해 책임을 지지 않습니다.",
+    "opensource": "오픈 소스 프로젝트",
+    "opensourceText": "본 프로젝트는 MIT 라이선스 하에 오픈 소스로 제공됩니다. 소스 코드는 GitHub에서 확인할 수 있습니다. 기여와 피드백을 환영합니다."
+  },
+  "language": {
+    "name": "한국어"
+  }
+}

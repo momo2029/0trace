@@ -1,0 +1,21 @@
+services:
+  0trace:
+    image: cobola/0trace:latest
+    container_name: 0trace
+    restart: unless-stopped
+    ports:
+      - "3100:3000"
+    environment:
+      - TZ=Asia/Shanghai
+      - RUST_LOG=info
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    networks:
+      - 0trace_network
+
+networks:
+  0trace_network:
+    driver: bridge

@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>0trace</title>
+    <meta name="description" content="Zero Privacy P2P File Transfer - WebRTC based peer-to-peer file sharing">
+    <meta name="theme-color" content="#6366f1">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" sizes="32x32" href="/static/images/favicon-32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/static/images/favicon-16.png">
+
+    <!-- Apple Touch Icon -->
+    <link rel="apple-touch-icon" href="/static/images/apple-touch-icon.png">
+
+    <!-- Web App Manifest -->
+    <link rel="manifest" href="/static/site.webmanifest">
+
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <div class="logo-container">
+                <img src="/static/images/logo.png" alt="0trace" class="logo">
+            </div>
+            <div class="lang-switcher">
+                <select id="lang-select">
+                    <option value="zh-CN">简体中文</option>
+                    <option value="en">English</option>
+                    <option value="ja">日本語</option>
+                    <option value="ko">한국어</option>
+                    <option value="es">Español</option>
+                    <option value="fr">Français</option>
+                </select>
+            </div>
+        </header>
+
+        <main>
+            <div class="tabs">
+                <button class="tab active" data-tab="send" data-i18n="tabs.send">发送文件</button>
+                <button class="tab" data-tab="receive" data-i18n="tabs.receive">接收文件</button>
+            </div>
+
+            <!-- 发送模式 -->
+            <div id="send-panel" class="panel active">
+                <div class="online-notice">
+                    <p data-i18n="send.notice">重要提示：请保持此页面打开，直到接收方完成下载。双方需同时在线才能传输文件。</p>
+                </div>
+
+                <div class="upload-area" id="upload-area">
+                    <input type="file" id="file-input" hidden multiple>
+                    <input type="file" id="folder-input" hidden webkitdirectory directory>
+                    <div class="upload-prompt">
+                        <p data-i18n="send.dragDrop">📁 拖拽文件/文件夹到这里</p>
+                        <div class="upload-buttons">
+                            <button id="select-file-btn" data-i18n="send.selectFile">选择文件</button>
+                            <button id="select-folder-btn" class="secondary"
+                                data-i18n="send.selectFolder">选择文件夹</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="file-info" class="file-info hidden">
+                    <p><span data-i18n="send.fileSelected">已选择</span>: <span id="file-name"></span></p>
+                    <p><span data-i18n="send.fileSize">大小</span>: <span id="file-size"></span></p>
+                </div>
+
+                <div id="room-code" class="room-code hidden">
+                    <h3 data-i18n="send.shareLink">分享链接</h3>
+                    <div class="code-display">
+                        <span id="code-text"></span>
+                        <button id="copy-btn" data-i18n="send.copyLink">复制链接</button>
+                    </div>
+                    <p class="hint" data-i18n="send.linkHint">将链接发送给接收方，打开即可自动接收</p>
+                </div>
+
+                <div id="connection-status" class="status hidden">
+                    <p><span data-i18n="send.connectionStatus">连接状态</span>: <span id="status-text"
+                            data-i18n="send.waiting">等待接收方...</span></p>
+                </div>
+
+                <div id="progress" class="progress hidden">
+                    <div class="progress-bar">
+                        <div id="progress-fill" class="progress-fill"></div>
+                    </div>
+                    <p><span id="progress-text">0%</span></p>
+                </div>
+            </div>
+
+            <!-- 接收模式 -->
+            <div id="receive-panel" class="panel">
+                <div class="online-notice">
+                    <p data-i18n="receive.notice">提示：收到链接后请立即打开，发送方需保持在线。</p>
+                </div>
+
+                <div class="code-input">
+                    <label for="code-input" data-i18n="receive.enterCode">输入取件码</label>
+                    <input type="text" id="code-input" data-i18n-placeholder="receive.codePlaceholder"
+                        placeholder="6位取件码" maxlength="6">
+                    <button id="join-btn" data-i18n="receive.joinRoom">加入房间</button>
+                </div>
+
+                <div id="receive-status" class="status hidden">
+                    <p><span data-i18n="send.connectionStatus">连接状态</span>: <span id="receive-status-text"
+                            data-i18n="send.connecting">连接中...</span></p>
+                </div>
+
+                <div id="receive-info" class="file-info hidden">
+                    <p><span data-i18n="receive.fileName">文件名</span>: <span id="receive-file-name"></span></p>
+                    <p><span data-i18n="send.fileSize">大小</span>: <span id="receive-file-size"></span></p>
+                </div>
+
+                <div id="receive-progress" class="progress hidden">
+                    <div class="progress-bar">
+                        <div id="receive-progress-fill" class="progress-fill"></div>
+                    </div>
+                    <p><span id="receive-progress-text">0%</span></p>
+                </div>
+            </div>
+        </main>
+
+        <footer>
+            <p data-i18n="footer.tech">基于 WebRTC P2P 技术 · 服务器不存储任何文件</p>
+            <div class="footer-links">
+                <a href="#" id="privacy-link" data-i18n="footer.privacy">隐私政策</a>
+                <span>·</span>
+                <a href="#" id="terms-link" data-i18n="footer.terms">使用条款</a>
+                <span>·</span>
+                <a href="https://github.com/yourusername/0trace" target="_blank" data-i18n="footer.github">GitHub</a>
+            </div>
+        </footer>
+    </div>
+
+    <!-- 隐私政策弹窗 -->
+    <div id="privacy-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2 data-i18n="privacy.title">隐私政策</h2>
+            <div class="modal-body">
+                <h3 data-i18n="privacy.dataProcessing">数据处理</h3>
+                <p data-i18n="privacy.dataProcessingText">0trace 使用 WebRTC
+                    点对点技术进行文件传输。所有文件直接在您的设备和接收方设备之间传输，不经过我们的服务器。我们的服务器仅用于建立连接（信令），不存储、不查看、不记录任何文件内容。</p>
+
+                <h3 data-i18n="privacy.noTracking">无追踪</h3>
+                <p data-i18n="privacy.noTrackingText">我们不使用任何分析工具、Cookie 或追踪技术。我们不收集您的个人信息、IP 地址或使用数据。</p>
+
+                <h3 data-i18n="privacy.security">安全性</h3>
+                <p data-i18n="privacy.securityText">文件传输使用 WebRTC 加密连接（DTLS/SRTP）。但请注意，任何获得分享链接的人都可以接收文件，请谨慎分享链接。</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 使用条款弹窗 -->
+    <div id="terms-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2 data-i18n="terms.title">使用条款</h2>
+            <div class="modal-body">
+                <h3 data-i18n="terms.prohibited">禁止行为</h3>
+                <p data-i18n="terms.prohibitedText">严禁使用本服务传输任何非法、侵权、有害、威胁、辱骂、骚扰、诽谤、粗俗、淫秽或其他令人反感的内容。包括但不限于：</p>
+                <ul>
+                    <li data-i18n="terms.prohibited1">侵犯版权、商标或其他知识产权的内容</li>
+                    <li data-i18n="terms.prohibited2">儿童色情或任何形式的非法色情内容</li>
+                    <li data-i18n="terms.prohibited3">恶意软件、病毒或其他有害代码</li>
+                    <li data-i18n="terms.prohibited4">违反任何适用法律法规的内容</li>
+                </ul>
+
+                <h3 data-i18n="terms.disclaimer">免责声明</h3>
+                <p data-i18n="terms.disclaimerText">本服务按"原样"提供，不提供任何明示或暗示的保证。我们不对服务的可用性、可靠性或适用性做任何保证。</p>
+
+                <h3 data-i18n="terms.liability">责任限制</h3>
+                <p data-i18n="terms.liabilityText">
+                    本项目是开源免费工具，仅提供技术服务。用户对其传输的内容承担全部责任。我们不对因使用本服务而产生的任何直接、间接、偶然、特殊或后果性损害承担责任。</p>
+
+                <h3 data-i18n="terms.opensource">开源项目</h3>
+                <p data-i18n="terms.opensourceText">本项目在 MIT 许可证下开源。源代码可在 GitHub 上获取。我们欢迎贡献和反馈。</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/i18n.js"></script>
+    <script type="module" src="/static/app.js"></script>
+</body>
+
+</html>

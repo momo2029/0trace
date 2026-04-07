@@ -1,0 +1,75 @@
+{
+  "app": {
+    "title": "0trace",
+    "subtitle": "Zéro Confidentialité · P2P · Sans Inscription"
+  },
+  "tabs": {
+    "send": "Envoyer des Fichiers",
+    "receive": "Recevoir des Fichiers"
+  },
+  "send": {
+    "notice": "Important : Gardez cette page ouverte jusqu'à ce que le destinataire termine le téléchargement. Les deux parties doivent être en ligne pour transférer des fichiers.",
+    "dragDrop": "Glissez des fichiers/dossiers ici",
+    "selectFile": "Sélectionner des Fichiers",
+    "selectFolder": "Sélectionner un Dossier",
+    "fileSelected": "Sélectionné",
+    "fileSize": "Taille",
+    "filesCount": "fichiers",
+    "shareLink": "Lien de Partage",
+    "copyLink": "Copier le Lien",
+    "linkHint": "Envoyez le lien au destinataire, il pourra recevoir automatiquement",
+    "connectionStatus": "État de la Connexion",
+    "waiting": "En attente du destinataire...",
+    "connecting": "Connexion...",
+    "connected": "Connecté, transfert en cours...",
+    "disconnected": "Déconnecté",
+    "failed": "Échec de la connexion",
+    "progress": "Progression du Transfert",
+    "linkCopied": "Lien copié ! Envoyez-le au destinataire pour démarrer le transfert",
+    "allFilesSent": "Tous les fichiers ont été envoyés avec succès !",
+    "createRoomFailed": "Échec de la création de la salle",
+    "folderDragNotSupported": "Le glisser-déposer de dossiers n'est pas pris en charge, utilisez le bouton 'Sélectionner un Dossier'"
+  },
+  "receive": {
+    "notice": "Astuce : Ouvrez le lien immédiatement après l'avoir reçu, l'expéditeur doit rester en ligne.",
+    "enterCode": "Entrer le Code",
+    "codePlaceholder": "Code à 6 chiffres",
+    "joinRoom": "Rejoindre la Salle",
+    "fileName": "Nom du Fichier",
+    "receiving": "Réception...",
+    "complete": "Fichier reçu avec succès !"
+  },
+  "footer": {
+    "tech": "Basé sur WebRTC P2P · Le serveur ne stocke aucun fichier",
+    "privacy": "Politique de Confidentialité",
+    "terms": "Conditions d'Utilisation",
+    "github": "GitHub"
+  },
+  "privacy": {
+    "title": "Politique de Confidentialité",
+    "dataProcessing": "Traitement des Données",
+    "dataProcessingText": "0trace utilise la technologie WebRTC peer-to-peer pour les transferts de fichiers. Tous les fichiers sont transférés directement entre votre appareil et celui du destinataire, sans passer par nos serveurs. Nos serveurs ne sont utilisés que pour établir des connexions (signalisation) et ne stockent, ne visualisent ni n'enregistrent aucun contenu de fichier.",
+    "noTracking": "Aucun Suivi",
+    "noTrackingText": "Nous n'utilisons aucun outil d'analyse, cookie ou technologie de suivi. Nous ne collectons pas vos informations personnelles, votre adresse IP ou vos données d'utilisation.",
+    "security": "Sécurité",
+    "securityText": "Les transferts de fichiers utilisent des connexions cryptées WebRTC (DTLS/SRTP). Cependant, veuillez noter que toute personne disposant du lien de partage peut recevoir des fichiers, alors partagez les liens avec prudence."
+  },
+  "terms": {
+    "title": "Conditions d'Utilisation",
+    "prohibited": "Activités Interdites",
+    "prohibitedText": "Il est strictement interdit d'utiliser ce service pour transmettre tout contenu illégal, contrefait, nuisible, menaçant, abusif, harcelant, diffamatoire, vulgaire, obscène ou autrement répréhensible. Y compris mais sans s'y limiter :",
+    "prohibited1": "Contenu portant atteinte aux droits d'auteur, aux marques commerciales ou à d'autres droits de propriété intellectuelle",
+    "prohibited2": "Pornographie infantile ou toute forme de contenu pornographique illégal",
+    "prohibited3": "Logiciels malveillants, virus ou autres codes nuisibles",
+    "prohibited4": "Contenu violant toute loi ou réglementation applicable",
+    "disclaimer": "Clause de Non-Responsabilité",
+    "disclaimerText": "Ce service est fourni \"tel quel\" sans aucune garantie expresse ou implicite. Nous ne garantissons pas la disponibilité, la fiabilité ou l'adéquation du service.",
+    "liability": "Limitation de Responsabilité",
+    "liabilityText": "Ce projet est un outil gratuit open source qui ne fournit que des services techniques. Les utilisateurs sont entièrement responsables du contenu qu'ils transmettent. Nous ne sommes pas responsables des dommages directs, indirects, accessoires, spéciaux ou consécutifs résultant de l'utilisation de ce service.",
+    "opensource": "Projet Open Source",
+    "opensourceText": "Ce projet est open source sous licence MIT. Le code source est disponible sur GitHub. Nous accueillons les contributions et les commentaires."
+  },
+  "language": {
+    "name": "Français"
+  }
+}

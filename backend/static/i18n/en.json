@@ -1,0 +1,75 @@
+{
+  "app": {
+    "title": "0trace",
+    "subtitle": "Zero Privacy · P2P · No Registration"
+  },
+  "tabs": {
+    "send": "Send Files",
+    "receive": "Receive Files"
+  },
+  "send": {
+    "notice": "Important: Keep this page open until the receiver completes the download. Both parties must be online to transfer files.",
+    "dragDrop": "Drag files/folders here",
+    "selectFile": "Select Files",
+    "selectFolder": "Select Folder",
+    "fileSelected": "Selected",
+    "fileSize": "Size",
+    "filesCount": "files",
+    "shareLink": "Share Link",
+    "copyLink": "Copy Link",
+    "linkHint": "Send the link to the receiver, they can receive automatically",
+    "connectionStatus": "Connection Status",
+    "waiting": "Waiting for receiver...",
+    "connecting": "Connecting...",
+    "connected": "Connected, transferring...",
+    "disconnected": "Disconnected",
+    "failed": "Connection failed",
+    "progress": "Transfer Progress",
+    "linkCopied": "Share link copied! Send it to the receiver to start transfer",
+    "allFilesSent": "All files sent successfully!",
+    "createRoomFailed": "Failed to create room",
+    "folderDragNotSupported": "Folder drag not supported, please use 'Select Folder' button"
+  },
+  "receive": {
+    "notice": "Tip: Open the link immediately after receiving it, the sender must stay online.",
+    "enterCode": "Enter Code",
+    "codePlaceholder": "6-digit code",
+    "joinRoom": "Join Room",
+    "fileName": "File Name",
+    "receiving": "Receiving...",
+    "complete": "File received successfully!"
+  },
+  "footer": {
+    "tech": "Based on WebRTC P2P · Server stores no files",
+    "privacy": "Privacy Policy",
+    "terms": "Terms of Use",
+    "github": "GitHub"
+  },
+  "privacy": {
+    "title": "Privacy Policy",
+    "dataProcessing": "Data Processing",
+    "dataProcessingText": "0trace uses WebRTC peer-to-peer technology for file transfers. All files are transferred directly between your device and the receiver's device, without passing through our servers. Our servers are only used to establish connections (signaling) and do not store, view, or record any file content.",
+    "noTracking": "No Tracking",
+    "noTrackingText": "We do not use any analytics tools, cookies, or tracking technologies. We do not collect your personal information, IP address, or usage data.",
+    "security": "Security",
+    "securityText": "File transfers use WebRTC encrypted connections (DTLS/SRTP). However, please note that anyone with the share link can receive files, so share links carefully."
+  },
+  "terms": {
+    "title": "Terms of Use",
+    "prohibited": "Prohibited Activities",
+    "prohibitedText": "It is strictly prohibited to use this service to transmit any illegal, infringing, harmful, threatening, abusive, harassing, defamatory, vulgar, obscene, or otherwise objectionable content. Including but not limited to:",
+    "prohibited1": "Content that infringes copyright, trademarks, or other intellectual property rights",
+    "prohibited2": "Child pornography or any form of illegal pornographic content",
+    "prohibited3": "Malware, viruses, or other harmful code",
+    "prohibited4": "Content that violates any applicable laws or regulations",
+    "disclaimer": "Disclaimer",
+    "disclaimerText": "This service is provided \"as is\" without any express or implied warranties. We make no warranties regarding the availability, reliability, or suitability of the service.",
+    "liability": "Limitation of Liability",
+    "liabilityText": "This project is an open-source free tool that only provides technical services. Users are fully responsible for the content they transmit. We are not liable for any direct, indirect, incidental, special, or consequential damages arising from the use of this service.",
+    "opensource": "Open Source Project",
+    "opensourceText": "This project is open source under the MIT license. Source code is available on GitHub. We welcome contributions and feedback."
+  },
+  "language": {
+    "name": "English"
+  }
+}
