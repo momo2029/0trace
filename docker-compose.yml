@@ -1,6 +1,6 @@
 services:
   0trace:
-    image: cobola/0trace:latest
+    image: ghcr.io/momo2029/0trace:latest
     container_name: 0trace
     restart: unless-stopped
     ports:
