@@ -33,7 +33,6 @@ body {
     overflow-x: hidden;
 }
 
-/* 背景装饰 */
 body::before {
     content: '';
     position: absolute;
@@ -56,7 +55,6 @@ body::before {
     box-shadow: var(--shadow-xl), 0 0 0 1px rgba(0, 0, 0, 0.05);
     max-width: 680px;
     width: 100%;
-    padding: 0;
     overflow: hidden;
     position: relative;
     z-index: 1;
@@ -76,7 +74,7 @@ body::before {
 
 header {
     text-align: center;
-    padding: 48px 40px 32px;
+    padding: 40px 40px 32px;
     background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
     color: white;
     position: relative;
@@ -86,94 +84,59 @@ header {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 16px;
-    margin-bottom: 0;
 }
 
 .logo {
-    width: 240px;
+    width: 200px;
     height: auto;
     filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.2));
 }
 
-.logo-container > div {
-    text-align: left;
-}
-
-.logo-container h1 {
-    margin-bottom: 4px;
-}
-
-.logo-container p {
-    margin: 0;
-}
-
-.lang-switcher {
-    position: absolute;
-    top: 20px;
-    right: 20px;
-}
-
-.lang-switcher select {
-    background: rgba(255, 255, 255, 0.2);
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    color: white;
-    padding: 8px 12px;
-    border-radius: 8px;
-    font-size: 14px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
-
-.lang-switcher select:hover {
-    background: rgba(255, 255, 255, 0.3);
-}
-
-.lang-switcher select option {
-    background: var(--primary);
-    color: white;
-}
-
-header::after {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    height: 4px;
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
-}
-
-header h1 {
-    font-size: 2.5rem;
-    font-weight: 700;
-    margin-bottom: 12px;
-    letter-spacing: -0.02em;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 12px;
-}
-
-header h1::before {
-    content: '🔒';
-    font-size: 2rem;
-}
-
-header p {
-    font-size: 1rem;
-    opacity: 0.95;
-    font-weight: 400;
-}
-
 main {
-    padding: 40px;
+    padding: 32px;
+}
+
+.intro {
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.08), rgba(139, 92, 246, 0.08));
+    border: 1px solid rgba(99, 102, 241, 0.15);
+    border-radius: 16px;
+    padding: 20px 24px;
+    margin-bottom: 24px;
+    line-height: 1.6;
+}
+
+.intro h3 {
+    color: var(--primary);
+    font-size: 1.1rem;
+    margin-bottom: 12px;
+    font-weight: 700;
+}
+
+.intro p {
+    color: var(--text-dark);
+    margin-bottom: 8px;
+    font-size: 0.9rem;
+}
+
+.intro strong {
+    color: var(--primary);
+    font-weight: 600;
+}
+
+.intro-note {
+    background: rgba(99, 102, 241, 0.06);
+    border-left: 3px solid var(--primary);
+    padding: 12px 16px;
+    border-radius: 0 8px 8px 0;
+    margin-top: 12px !important;
+    margin-bottom: 0 !important;
+    font-size: 0.88rem;
 }
 
 .tabs {
     display: flex;
     gap: 12px;
-    margin-bottom: 32px;
+    margin-bottom: 24px;
     background: var(--bg-light);
     padding: 6px;
     border-radius: 12px;
@@ -190,7 +153,6 @@ main {
     font-weight: 500;
     color: var(--text-light);
     transition: all 0.2s ease;
-    position: relative;
 }
 
 .tab:hover {
@@ -218,6 +180,30 @@ main {
     display: block;
 }
 
+.online-notice {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(5, 150, 105, 0.1));
+    border: 1px solid rgba(16, 185, 129, 0.3);
+    border-radius: 12px;
+    padding: 14px 18px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+}
+
+.online-notice::before {
+    content: '💡';
+    font-size: 1.1rem;
+    flex-shrink: 0;
+}
+
+.online-notice p {
+    color: var(--text-dark);
+    font-size: 0.88rem;
+    line-height: 1.5;
+    margin: 0;
+}
+
 .upload-area {
     border: 2px dashed var(--border);
     border-radius: 16px;
@@ -227,7 +213,6 @@ main {
     transition: all 0.3s ease;
     background: var(--bg-light);
     position: relative;
-    overflow: hidden;
 }
 
 .upload-area::before {
@@ -270,17 +255,6 @@ main {
     flex-wrap: wrap;
 }
 
-button.secondary {
-    background: white;
-    color: var(--primary);
-    border: 2px solid var(--primary);
-}
-
-button.secondary:hover {
-    background: var(--primary);
-    color: white;
-}
-
 button {
     padding: 12px 28px;
     border: none;
@@ -302,6 +276,17 @@ button:hover {
 
 button:active {
     transform: translateY(0);
+}
+
+button.secondary {
+    background: white;
+    color: var(--primary);
+    border: 2px solid var(--primary);
+}
+
+button.secondary:hover {
+    background: var(--primary);
+    color: white;
 }
 
 .file-info {
@@ -499,6 +484,7 @@ footer p {
     color: var(--text-light);
     font-size: 0.85rem;
     line-height: 1.6;
+    margin-bottom: 12px;
 }
 
 footer p::before {
@@ -506,169 +492,19 @@ footer p::before {
     margin-right: 6px;
 }
 
-.hidden {
-    display: none !important;
-}
-
-/* 响应式设计 */
-@media (max-width: 640px) {
-    .container {
-        border-radius: 16px;
-    }
-
-    header {
-        padding: 32px 24px 24px;
-    }
-
-    header h1 {
-        font-size: 2rem;
-    }
-
-    main {
-        padding: 24px;
-    }
-
-    .tabs {
-        flex-direction: column;
-        gap: 8px;
-    }
-
-    .code-display {
-        flex-direction: column;
-    }
-
-    .code-display span {
-        font-size: 1.8rem;
-        letter-spacing: 4px;
-    }
-
-    .code-input input {
-        width: 100%;
-        max-width: 240px;
-    }
-}
-
-/* 加载动画 */
-@keyframes spin {
-    to { transform: rotate(360deg); }
-}
-
-.loading {
-    display: inline-block;
-    width: 16px;
-    height: 16px;
-    border: 2px solid var(--border);
-    border-top-color: var(--primary);
-    border-radius: 50%;
-    animation: spin 0.8s linear infinite;
-}
-
-/* Toast 提示 */
-.toast {
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    background: white;
-    padding: 16px 24px;
-    border-radius: 12px;
-    box-shadow: var(--shadow-lg);
-    border-left: 4px solid var(--success);
-    z-index: 1000;
-    animation: slideInRight 0.3s ease;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    max-width: 400px;
-}
-
-.toast.error {
-    border-left-color: var(--danger);
-}
-
-.toast::before {
-    content: '✓';
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 24px;
-    height: 24px;
-    background: var(--success);
-    color: white;
-    border-radius: 50%;
-    font-weight: bold;
-}
-
-.toast.error::before {
-    content: '✕';
-    background: var(--danger);
-}
-
-@keyframes slideInRight {
-    from {
-        transform: translateX(400px);
-        opacity: 0;
-    }
-    to {
-        transform: translateX(0);
-        opacity: 1;
-    }
-}
-
-/* 在线提示 */
-.online-notice {
-    background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(5, 150, 105, 0.1));
-    border: 1px solid rgba(16, 185, 129, 0.3);
-    border-radius: 12px;
-    padding: 16px 20px;
-    margin: 20px 0;
-    display: flex;
-    align-items: flex-start;
-    gap: 12px;
-}
-
-.online-notice::before {
-    content: '💡';
-    font-size: 1.2rem;
-    flex-shrink: 0;
-}
-
-.online-notice p {
-    color: var(--text-dark);
-    font-size: 0.9rem;
-    line-height: 1.6;
-    margin: 0;
-}
-
-.online-notice strong {
-    color: var(--success);
-    font-weight: 600;
-}
-
-/* Footer 链接 */
-footer {
-    text-align: center;
-    padding: 24px 40px;
-    color: var(--text-light);
-    font-size: 0.9rem;
-    border-top: 1px solid var(--border);
-}
-
-footer p {
-    margin-bottom: 12px;
-}
-
 .footer-links {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 12px;
-    margin-top: 12px;
+    gap: 8px;
+    flex-wrap: wrap;
 }
 
 .footer-links a {
     color: var(--primary);
     text-decoration: none;
-    transition: color 0.3s ease;
+    transition: color 0.2s ease;
+    font-size: 0.85rem;
 }
 
 .footer-links a:hover {
@@ -680,7 +516,37 @@ footer p {
     color: var(--border);
 }
 
-/* Modal 弹窗 */
+.footer-links select {
+    background: var(--bg-light);
+    border: 1px solid var(--border);
+    color: var(--text-dark);
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.footer-links select:hover {
+    border-color: var(--primary);
+}
+
+.footer-links select:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+.footer-links select option {
+    background: white;
+    color: var(--text-dark);
+}
+
+.hidden {
+    display: none !important;
+}
+
+/* Modal */
 .modal {
     display: none;
     position: fixed;
@@ -771,7 +637,95 @@ footer p {
     background: rgba(255, 255, 255, 0.2);
 }
 
-@keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
+/* Toast */
+.toast {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: white;
+    padding: 16px 24px;
+    border-radius: 12px;
+    box-shadow: var(--shadow-lg);
+    border-left: 4px solid var(--success);
+    z-index: 1000;
+    animation: slideInRight 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    max-width: 400px;
+}
+
+.toast.error {
+    border-left-color: var(--danger);
+}
+
+.toast::before {
+    content: '✓';
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    background: var(--success);
+    color: white;
+    border-radius: 50%;
+    font-weight: bold;
+}
+
+.toast.error::before {
+    content: '✕';
+    background: var(--danger);
+}
+
+@keyframes slideInRight {
+    from {
+        transform: translateX(400px);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+    .container {
+        border-radius: 16px;
+    }
+
+    header {
+        padding: 32px 24px 24px;
+    }
+
+    .logo {
+        width: 160px;
+    }
+
+    main {
+        padding: 24px;
+    }
+
+    .intro {
+        padding: 16px 20px;
+    }
+
+    .tabs {
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .code-display {
+        flex-direction: column;
+    }
+
+    .code-display span {
+        font-size: 1.8rem;
+        letter-spacing: 4px;
+    }
+
+    .code-input input {
+        width: 100%;
+        max-width: 240px;
+    }
 }

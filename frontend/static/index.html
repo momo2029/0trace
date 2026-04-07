@@ -27,19 +27,17 @@
             <div class="logo-container">
                 <img src="/static/images/logo.png" alt="0trace" class="logo">
             </div>
-            <div class="lang-switcher">
-                <select id="lang-select">
-                    <option value="zh-CN">简体中文</option>
-                    <option value="en">English</option>
-                    <option value="ja">日本語</option>
-                    <option value="ko">한국어</option>
-                    <option value="es">Español</option>
-                    <option value="fr">Français</option>
-                </select>
-            </div>
         </header>
 
         <main>
+            <!-- 介绍区域 -->
+            <div class="intro">
+                <h3 data-i18n="intro.title">什么是 0trace？</h3>
+                <p data-i18n="intro.description">0trace 是一款基于 WebRTC 的点对点（P2P）文件传输工具。文件直接在您的设备和接收方之间传输，不经过服务器存储，速度快且保护隐私。</p>
+                <p><strong data-i18n="intro.howToSend">发送文件：上传 → 复制链接 → 发送给对方</strong></p>
+                <p><strong data-i18n="intro.howToReceive">接收文件：打开链接 → 自动开始接收（无需登录）</strong></p>
+            </div>
+
             <div class="tabs">
                 <button class="tab active" data-tab="send" data-i18n="tabs.send">发送文件</button>
                 <button class="tab" data-tab="receive" data-i18n="tabs.receive">接收文件</button>
@@ -131,6 +129,15 @@
                 <a href="#" id="terms-link" data-i18n="footer.terms">使用条款</a>
                 <span>·</span>
                 <a href="https://github.com/momo2029/0trace" target="_blank" data-i18n="footer.github">GitHub</a>
+                <span>·</span>
+                <select id="lang-select">
+                    <option value="zh-CN">简体中文</option>
+                    <option value="en">English</option>
+                    <option value="ja">日本語</option>
+                    <option value="ko">한국어</option>
+                    <option value="es">Español</option>
+                    <option value="fr">Français</option>
+                </select>
             </div>
         </footer>
     </div>
