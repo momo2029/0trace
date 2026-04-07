@@ -449,16 +449,58 @@ class App {
 
         // 复制按钮
         document.getElementById('copy-btn').addEventListener('click', () => {
-            const code = document.getElementById('code-text').textContent;
+            const codeText = document.getElementById('code-text').textContent;
+            const code = codeText.replace('-', '');
             const shareUrl = `${window.location.origin}/?code=${code}`;
             navigator.clipboard.writeText(shareUrl);
             this.showToast(i18n.t('send.linkCopied'));
         });
 
-        // 接收模式
+        // 接收模式 - 取件码输入框
+        const codeBoxes = document.querySelectorAll('.code-box');
+
+        codeBoxes.forEach((box, index) => {
+            // 输入时自动跳转到下一个框
+            box.addEventListener('input', (e) => {
+                const value = e.target.value;
+                if (value && /^\d$/.test(value)) {
+                    // 跳过分隔符，找到下一个输入框
+                    if (index < 7) {
+                        codeBoxes[index + 1].focus();
+                    } else {
+                        // 第8位输入完成，自动加入房间
+                        const code = Array.from(codeBoxes).map(box => box.value).join('');
+                        if (code.length === 8 && /^\d{8}$/.test(code)) {
+                            this.joinRoom(code);
+                        }
+                    }
+                }
+            });
+
+            // 删除时跳转到上一个框
+            box.addEventListener('keydown', (e) => {
+                if (e.key === 'Backspace' && !e.target.value && index > 0) {
+                    codeBoxes[index - 1].focus();
+                }
+            });
+
+            // 支持粘贴完整取件码
+            box.addEventListener('paste', (e) => {
+                e.preventDefault();
+                const pasteData = e.clipboardData.getData('text').replace(/\D/g, '');
+                if (pasteData.length === 8) {
+                    codeBoxes.forEach((b, i) => {
+                        b.value = pasteData[i];
+                    });
+                    codeBoxes[7].focus();
+                }
+            });
+        });
+
+        // 接收模式 - 加入按钮
         document.getElementById('join-btn').addEventListener('click', () => {
-            const code = document.getElementById('code-input').value.trim().toUpperCase();
-            if (code.length === 6) {
+            const code = Array.from(codeBoxes).map(box => box.value).join('');
+            if (code.length === 8 && /^\d{8}$/.test(code)) {
                 this.joinRoom(code);
             } else {
                 this.showToast(i18n.t('receive.codePlaceholder'), 'error');
@@ -470,14 +512,17 @@ class App {
         const params = new URLSearchParams(window.location.search);
         const code = params.get('code');
 
-        if (code && code.length === 6) {
+        if (code && code.length === 8 && /^\d{8}$/.test(code)) {
             // 切换到接收模式
             this.switchTab('receive');
-            // 自动填充取件码
-            document.getElementById('code-input').value = code.toUpperCase();
+            // 自动填充取件码到输入框
+            const codeBoxes = document.querySelectorAll('.code-box');
+            codeBoxes.forEach((box, i) => {
+                box.value = code[i];
+            });
             // 自动加入房间
             setTimeout(() => {
-                this.joinRoom(code.toUpperCase());
+                this.joinRoom(code);
             }, 500);
         }
     }
@@ -515,9 +560,23 @@ class App {
             const code = await this.connection.createRoom();
 
             // 显示取件码
-            document.getElementById('code-text').textContent = code;
+            document.getElementById('code-text').textContent = code.slice(0, 4) + '-' + code.slice(4);
             document.getElementById('room-code').classList.remove('hidden');
             document.getElementById('connection-status').classList.remove('hidden');
+
+            // 生成二维码
+            const url = `${window.location.origin}/?code=${code}`;
+            const qrcodeSticker = document.getElementById('qrcode');
+            qrcodeSticker.innerHTML = ''; // 清空之前的二维码
+            qrcodeSticker.classList.remove('hidden');
+            new QRCode(qrcodeSticker, {
+                text: url,
+                width: 140,
+                height: 140,
+                colorDark: '#6366f1',
+                colorLight: '#ffffff',
+                correctLevel: QRCode.CorrectLevel.M
+            });
 
             // 等待连接后发送文件
             const checkConnection = setInterval(() => {

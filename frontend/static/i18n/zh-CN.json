@@ -33,7 +33,7 @@
   "receive": {
     "notice": "提示：收到链接后请立即打开，发送方需保持在线。",
     "enterCode": "输入取件码",
-    "codePlaceholder": "6位取件码",
+    "codePlaceholder": "8位取件码",
     "joinRoom": "加入房间",
     "fileName": "文件名",
     "receiving": "接收中...",

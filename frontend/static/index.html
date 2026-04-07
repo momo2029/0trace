@@ -97,8 +97,17 @@
 
                 <div class="code-input">
                     <label for="code-input" data-i18n="receive.enterCode">输入取件码</label>
-                    <input type="text" id="code-input" data-i18n-placeholder="receive.codePlaceholder"
-                        placeholder="6位取件码" maxlength="6">
+                    <div class="code-input-boxes">
+                        <input type="text" class="code-box" maxlength="1" data-index="0">
+                        <input type="text" class="code-box" maxlength="1" data-index="1">
+                        <input type="text" class="code-box" maxlength="1" data-index="2">
+                        <input type="text" class="code-box" maxlength="1" data-index="3">
+                        <span class="code-separator">-</span>
+                        <input type="text" class="code-box" maxlength="1" data-index="4">
+                        <input type="text" class="code-box" maxlength="1" data-index="5">
+                        <input type="text" class="code-box" maxlength="1" data-index="6">
+                        <input type="text" class="code-box" maxlength="1" data-index="7">
+                    </div>
                     <button id="join-btn" data-i18n="receive.joinRoom">加入房间</button>
                 </div>
 
@@ -141,6 +150,9 @@
             </div>
         </footer>
     </div>
+
+    <!-- 二维码贴纸 -->
+    <div id="qrcode" class="qrcode-sticker hidden"></div>
 
     <!-- 隐私政策弹窗 -->
     <div id="privacy-modal" class="modal">
@@ -189,6 +201,7 @@
         </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
     <script src="/static/i18n.js"></script>
     <script type="module" src="/static/app.js"></script>
 </body>

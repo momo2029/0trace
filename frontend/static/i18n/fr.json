@@ -33,7 +33,7 @@
   "receive": {
     "notice": "Astuce : Ouvrez le lien immédiatement après l'avoir reçu, l'expéditeur doit rester en ligne.",
     "enterCode": "Entrer le Code",
-    "codePlaceholder": "Code à 6 chiffres",
+    "codePlaceholder": "Code à 8 chiffres",
     "joinRoom": "Rejoindre la Salle",
     "fileName": "Nom du Fichier",
     "receiving": "Réception...",

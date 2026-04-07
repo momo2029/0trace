@@ -33,7 +33,7 @@
   "receive": {
     "notice": "Tip: Open the link immediately after receiving it, the sender must stay online.",
     "enterCode": "Enter Code",
-    "codePlaceholder": "6-digit code",
+    "codePlaceholder": "8-digit code",
     "joinRoom": "Join Room",
     "fileName": "File Name",
     "receiving": "Receiving...",

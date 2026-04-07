@@ -33,7 +33,7 @@
   "receive": {
     "notice": "Consejo: Abre el enlace inmediatamente después de recibirlo, el remitente debe permanecer en línea.",
     "enterCode": "Ingresar Código",
-    "codePlaceholder": "Código de 6 dígitos",
+    "codePlaceholder": "Código de 8 dígitos",
     "joinRoom": "Unirse a la Sala",
     "fileName": "Nombre del Archivo",
     "receiving": "Recibiendo...",

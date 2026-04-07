@@ -33,7 +33,7 @@
   "receive": {
     "notice": "ヒント：リンクを受け取ったらすぐに開いてください。送信者はオンラインのままにする必要があります。",
     "enterCode": "コードを入力",
-    "codePlaceholder": "6桁のコード",
+    "codePlaceholder": "8桁のコード",
     "joinRoom": "ルームに参加",
     "fileName": "ファイル名",
     "receiving": "受信中...",

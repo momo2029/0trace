@@ -9,12 +9,12 @@ pub struct RoomStatus {
     pub created_at: u64,
 }
 
-/// 生成 6 位房间码
+/// 生成 8 位数字房间码
 pub fn generate_room_code() -> String {
     use std::time::{SystemTime, UNIX_EPOCH};
 
-    const CHARS: &[u8] = b"23456789ABCDEFGHJKMNPQRSTUVWXYZ";
-    let mut code = String::with_capacity(6);
+    const CHARS: &[u8] = b"0123456789";
+    let mut code = String::with_capacity(8);
 
     let seed = SystemTime::now()
         .duration_since(UNIX_EPOCH)
@@ -22,7 +22,7 @@ pub fn generate_room_code() -> String {
         .as_nanos();
 
     let mut rng = seed;
-    for _ in 0..6 {
+    for _ in 0..8 {
         rng = rng.wrapping_mul(1103515245).wrapping_add(12345);
         let idx = (rng / 65536) % (CHARS.len() as u128);
         code.push(CHARS[idx as usize] as char);
@@ -38,7 +38,7 @@ mod tests {
     #[test]
     fn test_generate_room_code() {
         let code = generate_room_code();
-        assert_eq!(code.len(), 6);
-        assert!(code.chars().all(|c| "123456789ABCDEFGHIJKLMNPQRSTUVWXYZ".contains(c)));
+        assert_eq!(code.len(), 8);
+        assert!(code.chars().all(|c| "0123456789".contains(c)));
     }
 }

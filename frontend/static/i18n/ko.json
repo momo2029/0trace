@@ -33,7 +33,7 @@
   "receive": {
     "notice": "팁: 링크를 받으면 즉시 열어주세요. 발신자는 온라인 상태를 유지해야 합니다.",
     "enterCode": "코드 입력",
-    "codePlaceholder": "6자리 코드",
+    "codePlaceholder": "8자리 코드",
     "joinRoom": "방 참가",
     "fileName": "파일 이름",
     "receiving": "수신 중...",
