@@ -28,7 +28,12 @@
     "linkCopied": "分享链接已复制！发送给接收方即可开始传输",
     "allFilesSent": "所有文件发送完成！",
     "createRoomFailed": "创建房间失败",
-    "folderDragNotSupported": "文件夹拖拽暂不支持，请使用\"选择文件夹\"按钮"
+    "folderDragNotSupported": "文件夹拖拽暂不支持，请使用\"选择文件夹\"按钮",
+    "fileList": "文件列表",
+    "addMore": "添加更多",
+    "clearAll": "清空",
+    "totalFiles": "共",
+    "totalSize": "总大小"
   },
   "receive": {
     "notice": "提示：收到链接后请立即打开，发送方需保持在线。",

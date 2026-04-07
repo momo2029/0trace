@@ -2,7 +2,12 @@
 
 # 0trace 热更新启动脚本
 
+# 找到项目根目录
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+cd "$SCRIPT_DIR" || exit 1
+
 echo "🚀 启动 0trace 开发服务器（热更新模式）"
+echo "📂 项目目录：$SCRIPT_DIR"
 echo ""
 
 # 检查 cargo-watch 是否安装
@@ -20,8 +25,11 @@ echo ""
 echo "按 Ctrl+C 停止服务"
 echo ""
 
+# 切换到 backend 目录运行
+cd backend || exit 1
+
 # 使用 cargo-watch 监听文件变化并自动重启
 exec cargo watch \
-    -w backend/src \
-    -w shared/src \
-    -x "run --manifest-path backend/Cargo.toml"
+    -w src \
+    -w ../shared/src \
+    -x run

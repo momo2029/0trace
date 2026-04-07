@@ -82,6 +82,8 @@ class WebRTCConnection {
             iceServers: [
                 { urls: 'stun:stun.l.google.com:19302' },
                 { urls: 'stun:stun1.l.google.com:19302' },
+                { urls: 'stun:stun.cloudflare.com:3478' },
+                { urls: 'stun:stun.qq.com:3478' },
             ]
         };
 
@@ -89,6 +91,7 @@ class WebRTCConnection {
 
         this.pc.onicecandidate = (event) => {
             if (event.candidate) {
+                console.log('ICE Candidate:', event.candidate.type, event.candidate.candidate);
                 this.sendSignal({
                     type: 'ice-candidate',
                     candidate: JSON.stringify(event.candidate)
@@ -98,7 +101,18 @@ class WebRTCConnection {
 
         this.pc.onconnectionstatechange = () => {
             console.log('Connection state:', this.pc.connectionState);
+            console.log('ICE connection state:', this.pc.iceConnectionState);
+            console.log('ICE gathering state:', this.pc.iceGatheringState);
             this.updateStatus(this.pc.connectionState);
+        };
+
+        this.pc.onicecandidateerror = (event) => {
+            // 忽略 STUN 服务器失败（有多个备用）
+            if (event.errorCode === 701) {
+                console.log('STUN server unreachable (using fallback):', event.url);
+            } else {
+                console.error('ICE Candidate Error:', event);
+            }
         };
 
         if (this.role === 'sender') {
@@ -521,6 +535,18 @@ class App {
             }
         });
 
+        // 添加更多文件
+        document.getElementById('add-more-btn').addEventListener('click', () => {
+            fileInput.click();
+        });
+
+        // 清空所有文件
+        document.getElementById('clear-all-btn').addEventListener('click', () => {
+            this.selectedFiles = [];
+            document.getElementById('file-list').classList.add('hidden');
+            document.getElementById('upload-area').classList.remove('hidden');
+        });
+
         fileInput.addEventListener('change', (e) => {
             if (e.target.files.length > 0) {
                 this.handleFilesSelect(Array.from(e.target.files));
@@ -662,58 +688,122 @@ class App {
     async handleFilesSelect(files) {
         if (!files || files.length === 0) return;
 
-        this.selectedFiles = files;
-        const totalSize = files.reduce((sum, f) => sum + f.size, 0);
-        const fileCount = files.length;
-
-        // 显示文件信息
-        if (fileCount === 1) {
-            document.getElementById('file-name').textContent = files[0].name;
-        } else {
-            document.getElementById('file-name').textContent = `${fileCount} ${i18n.t('send.filesCount')}`;
+        // 添加到已选文件列表（不覆盖）
+        if (!this.selectedFiles) {
+            this.selectedFiles = [];
         }
-        document.getElementById('file-size').textContent = this.formatSize(totalSize);
-        document.getElementById('file-info').classList.remove('hidden');
+        this.selectedFiles = [...this.selectedFiles, ...Array.from(files)];
 
-        // 创建房间
-        try {
-            this.connection = new WebRTCConnection();
-            this.connection.onStatusChange = (status) => this.updateSendStatus(status);
-            this.connection.onProgress = (progress, speed) => this.updateSendProgress(progress, speed);
+        // 更新文件列表显示
+        this.updateFileList();
 
-            const code = await this.connection.createRoom();
+        // 如果还没有房间，创建房间
+        if (!this.connection || !this.connection.code) {
+            try {
+                this.connection = new WebRTCConnection();
+                this.connection.onStatusChange = (status) => this.updateSendStatus(status);
+                this.connection.onProgress = (progress, speed) => this.updateSendProgress(progress, speed);
 
-            // 显示取件码
-            document.getElementById('code-text').textContent = code.slice(0, 4) + '-' + code.slice(4);
-            document.getElementById('room-code').classList.remove('hidden');
-            document.getElementById('connection-status').classList.remove('hidden');
+                const code = await this.connection.createRoom();
 
-            // 生成二维码
-            const url = `${window.location.origin}/?code=${code}`;
-            const qrcodeSticker = document.getElementById('qrcode');
-            qrcodeSticker.innerHTML = ''; // 清空之前的二维码
-            qrcodeSticker.classList.remove('hidden');
-            new QRCode(qrcodeSticker, {
-                text: url,
-                width: 140,
-                height: 140,
-                colorDark: '#6366f1',
-                colorLight: '#ffffff',
-                correctLevel: QRCode.CorrectLevel.M
-            });
-
-            // 等待连接后发送文件
-            const checkConnection = setInterval(() => {
-                if (this.connection.dc && this.connection.dc.readyState === 'open') {
-                    clearInterval(checkConnection);
-                    this.sendFiles();
-                    document.getElementById('progress').classList.remove('hidden');
+                // 显示取件码
+                const codeTextEl = document.getElementById('code-text');
+                if (codeTextEl) {
+                    codeTextEl.textContent = code.slice(0, 4) + '-' + code.slice(4);
                 }
-            }, 500);
 
-        } catch (error) {
-            console.error('Error:', error);
-            this.showToast(i18n.t('send.createRoomFailed'), 'error');
+                const roomCodeEl = document.getElementById('room-code');
+                if (roomCodeEl) {
+                    roomCodeEl.classList.remove('hidden');
+                }
+
+                const connectionStatusEl = document.getElementById('connection-status');
+                if (connectionStatusEl) {
+                    connectionStatusEl.classList.remove('hidden');
+                }
+
+                // 生成二维码
+                const url = `${window.location.origin}/?code=${code}`;
+                const qrcodeSticker = document.getElementById('qrcode');
+                if (qrcodeSticker) {
+                    qrcodeSticker.innerHTML = '';
+                    qrcodeSticker.classList.remove('hidden');
+                    new QRCode(qrcodeSticker, {
+                        text: url,
+                        width: 140,
+                        height: 140,
+                        colorDark: '#6366f1',
+                        colorLight: '#ffffff',
+                        correctLevel: QRCode.CorrectLevel.M
+                    });
+                }
+
+                // 等待连接后发送文件
+                const checkConnection = setInterval(() => {
+                    if (this.connection.dc && this.connection.dc.readyState === 'open') {
+                        clearInterval(checkConnection);
+                        this.sendFiles();
+                        const progressEl = document.getElementById('progress');
+                        if (progressEl) {
+                            progressEl.classList.remove('hidden');
+                        }
+                    }
+                }, 500);
+
+            } catch (error) {
+                console.error('Error:', error);
+                this.showToast(i18n.t('send.createRoomFailed'), 'error');
+            }
+        }
+    }
+
+    updateFileList() {
+        // 隐藏上传区域，显示文件列表
+        document.getElementById('upload-area').classList.add('hidden');
+        document.getElementById('file-list').classList.remove('hidden');
+
+        const fileItems = document.getElementById('file-items');
+        fileItems.innerHTML = '';
+
+        this.selectedFiles.forEach((file, index) => {
+            const item = document.createElement('div');
+            item.className = 'file-item';
+            item.innerHTML = `
+                <div class="file-item-info">
+                    <div class="file-item-icon">📄</div>
+                    <div class="file-item-details">
+                        <div class="file-item-name">${file.name}</div>
+                        <div class="file-item-size">${this.formatSize(file.size)}</div>
+                    </div>
+                </div>
+                <button class="file-item-remove" data-index="${index}">删除</button>
+            `;
+            fileItems.appendChild(item);
+        });
+
+        // 更新统计
+        const totalSize = this.selectedFiles.reduce((sum, f) => sum + f.size, 0);
+        document.getElementById('total-files').textContent = this.selectedFiles.length;
+        document.getElementById('total-size').textContent = this.formatSize(totalSize);
+
+        // 绑定删除按钮
+        document.querySelectorAll('.file-item-remove').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const index = parseInt(e.target.dataset.index);
+                this.removeFile(index);
+            });
+        });
+    }
+
+    removeFile(index) {
+        this.selectedFiles.splice(index, 1);
+
+        if (this.selectedFiles.length === 0) {
+            // 没有文件了，显示上传区域
+            document.getElementById('file-list').classList.add('hidden');
+            document.getElementById('upload-area').classList.remove('hidden');
+        } else {
+            this.updateFileList();
         }
     }
 

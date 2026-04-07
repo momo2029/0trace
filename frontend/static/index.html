@@ -64,9 +64,20 @@
                     </div>
                 </div>
 
-                <div id="file-info" class="file-info hidden">
-                    <p><span data-i18n="send.fileSelected">已选择</span>: <span id="file-name"></span></p>
-                    <p><span data-i18n="send.fileSize">大小</span>: <span id="file-size"></span></p>
+                <div id="file-list" class="file-list hidden">
+                    <div class="file-list-header">
+                        <h3 data-i18n="send.fileList">文件列表</h3>
+                        <div class="file-list-actions">
+                            <button id="add-more-btn" class="secondary" data-i18n="send.addMore">添加更多</button>
+                            <button id="clear-all-btn" class="secondary" data-i18n="send.clearAll">清空</button>
+                        </div>
+                    </div>
+                    <div id="file-items" class="file-items"></div>
+                    <div class="file-list-summary">
+                        <span data-i18n="send.totalFiles">共</span> <span id="total-files">0</span> <span data-i18n="send.filesCount">个文件</span>
+                        <span class="separator">·</span>
+                        <span data-i18n="send.totalSize">总大小</span>: <span id="total-size">0 B</span>
+                    </div>
                 </div>
 
                 <div id="room-code" class="room-code hidden">

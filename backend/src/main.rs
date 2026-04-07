@@ -43,12 +43,19 @@ async fn main() {
 
     let state = AppState { room_manager };
 
+    // 静态文件路径：开发环境和生产环境自动适配
+    let static_path = if std::path::Path::new("../frontend/static").exists() {
+        "../frontend/static" // 开发环境：从 backend/ 目录运行
+    } else {
+        "frontend/static"    // 生产环境：从项目根目录运行
+    };
+
     let app = Router::new()
         .route("/", get(index_handler))
         .route("/api/create-room", post(create_room_handler))
         .route("/api/room-info", get(room_info_handler))
         .route("/api/ws", get(ws_handler))
-        .nest_service("/static", ServeDir::new("frontend/static"))
+        .nest_service("/static", ServeDir::new(static_path))
         .layer(CorsLayer::permissive())
         .with_state(state);
 
