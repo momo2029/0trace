@@ -86,10 +86,20 @@ header {
     justify-content: center;
 }
 
+.logo-container a {
+    display: block;
+    cursor: pointer;
+}
+
 .logo {
     width: 360px;
     height: auto;
     filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.2));
+    transition: transform 0.2s ease;
+}
+
+.logo:hover {
+    transform: scale(1.02);
 }
 
 main {
@@ -774,17 +784,20 @@ footer p::before {
     }
 
     .code-input-boxes {
-        gap: 6px;
+        gap: 4px;
+        flex-wrap: wrap;
+        max-width: 100%;
     }
 
     .code-box {
-        width: 40px;
-        height: 48px;
-        font-size: 1.5rem;
+        width: 36px;
+        height: 44px;
+        font-size: 1.4rem;
+        padding: 0;
     }
 
     .code-separator {
-        font-size: 1.5rem;
+        font-size: 1.4rem;
         margin: 0 2px;
     }
 }

@@ -14,6 +14,17 @@ class WebRTCConnection {
         this.receiveBuffer = [];
         this.receivedSize = 0;
         this.fileMetadata = null;
+
+        // 速度统计
+        this.speedStats = {
+            lastTime: 0,
+            lastBytes: 0,
+            currentSpeed: 0
+        };
+
+        // 流式写入
+        this.fileWriter = null;
+        this.useStreaming = false;
     }
 
     // 创建房间
@@ -208,6 +219,7 @@ class WebRTCConnection {
         // 分块发送
         const chunkSize = 256 * 1024; // 256KB
         const totalChunks = Math.ceil(file.size / chunkSize);
+        let sentBytes = 0;
 
         for (let i = 0; i < totalChunks; i++) {
             const start = i * chunkSize;
@@ -224,6 +236,9 @@ class WebRTCConnection {
             // 发送块数据
             const arrayBuffer = await chunk.arrayBuffer();
             this.dc.send(arrayBuffer);
+
+            sentBytes += arrayBuffer.byteLength;
+            this.calculateSpeed(sentBytes);
 
             // 更新进度
             const progress = Math.round(((i + 1) / totalChunks) * 100);
@@ -245,6 +260,12 @@ class WebRTCConnection {
                 this.fileMetadata = message;
                 this.receiveBuffer = [];
                 this.receivedSize = 0;
+
+                // 大文件使用流式写入
+                if (message.size > 100 * 1024 * 1024) { // > 100MB
+                    this.initStreamingDownload(message);
+                }
+
                 if (this.onFileReceive) {
                     this.onFileReceive({ type: 'meta', data: message });
                 }
@@ -255,19 +276,44 @@ class WebRTCConnection {
                 break;
 
             case 'complete':
-                this.assembleFile();
+                if (this.useStreaming) {
+                    this.finalizeStreamingDownload();
+                } else {
+                    this.assembleFile();
+                }
                 break;
         }
     }
 
     // 处理文件块
-    handleFileChunk(arrayBuffer) {
-        this.receiveBuffer.push(arrayBuffer);
-        this.receivedSize += arrayBuffer.byteLength;
+    async handleFileChunk(arrayBuffer) {
+        if (this.useStreaming && this.fileWriter) {
+            // 流式写入磁盘
+            try {
+                await this.fileWriter.write(arrayBuffer);
+                this.receivedSize += arrayBuffer.byteLength;
+                this.calculateSpeed(this.receivedSize);
 
-        if (this.fileMetadata) {
-            const progress = Math.round((this.receivedSize / this.fileMetadata.size) * 100);
-            this.updateProgress(progress);
+                if (this.fileMetadata) {
+                    const progress = Math.round((this.receivedSize / this.fileMetadata.size) * 100);
+                    this.updateProgress(progress);
+                }
+            } catch (error) {
+                console.error('Stream write error:', error);
+                // 降级到内存模式
+                this.useStreaming = false;
+                this.receiveBuffer.push(arrayBuffer);
+            }
+        } else {
+            // 内存模式
+            this.receiveBuffer.push(arrayBuffer);
+            this.receivedSize += arrayBuffer.byteLength;
+            this.calculateSpeed(this.receivedSize);
+
+            if (this.fileMetadata) {
+                const progress = Math.round((this.receivedSize / this.fileMetadata.size) * 100);
+                this.updateProgress(progress);
+            }
         }
     }
 
@@ -290,6 +336,51 @@ class WebRTCConnection {
         console.log('File received successfully');
     }
 
+    // 初始化流式下载
+    async initStreamingDownload(metadata) {
+        try {
+            // 检查浏览器支持
+            if (!window.showSaveFilePicker) {
+                console.log('Browser does not support File System Access API, using memory mode');
+                this.useStreaming = false;
+                return;
+            }
+
+            // 请求用户选择保存位置
+            const fileHandle = await window.showSaveFilePicker({
+                suggestedName: metadata.name,
+                types: [{
+                    description: 'File',
+                    accept: { [metadata.mimeType || 'application/octet-stream']: [] }
+                }]
+            });
+
+            this.fileWriter = await fileHandle.createWritable();
+            this.useStreaming = true;
+            console.log('Streaming mode enabled');
+        } catch (error) {
+            console.log('User cancelled or error:', error);
+            this.useStreaming = false;
+        }
+    }
+
+    // 完成流式下载
+    async finalizeStreamingDownload() {
+        if (this.fileWriter) {
+            try {
+                await this.fileWriter.close();
+                console.log('File saved successfully');
+
+                if (this.onFileReceive) {
+                    this.onFileReceive({ type: 'complete' });
+                }
+            } catch (error) {
+                console.error('Error closing file:', error);
+            }
+            this.fileWriter = null;
+        }
+    }
+
     // 更新状态
     updateStatus(status) {
         if (this.onStatusChange) {
@@ -300,8 +391,29 @@ class WebRTCConnection {
     // 更新进度
     updateProgress(progress) {
         if (this.onProgress) {
-            this.onProgress(progress);
+            this.onProgress(progress, this.speedStats.currentSpeed);
         }
+    }
+
+    // 计算传输速度
+    calculateSpeed(currentBytes) {
+        const now = Date.now();
+        if (this.speedStats.lastTime === 0) {
+            this.speedStats.lastTime = now;
+            this.speedStats.lastBytes = currentBytes;
+            return 0;
+        }
+
+        const timeDiff = (now - this.speedStats.lastTime) / 1000; // 秒
+        const bytesDiff = currentBytes - this.speedStats.lastBytes;
+
+        if (timeDiff >= 0.5) { // 每0.5秒更新一次
+            this.speedStats.currentSpeed = bytesDiff / timeDiff;
+            this.speedStats.lastTime = now;
+            this.speedStats.lastBytes = currentBytes;
+        }
+
+        return this.speedStats.currentSpeed;
     }
 
     // 关闭连接
@@ -396,6 +508,18 @@ class App {
 
         selectFileBtn.addEventListener('click', () => fileInput.click());
         selectFolderBtn.addEventListener('click', () => folderInput.click());
+
+        // Logo 点击清除 URL 参数
+        document.getElementById('logo-link').addEventListener('click', (e) => {
+            if (window.location.search) {
+                e.preventDefault();
+                window.history.pushState({}, '', window.location.pathname);
+                // 清空输入框
+                document.querySelectorAll('.code-box').forEach(box => box.value = '');
+                // 切换到发送模式
+                this.switchTab('send');
+            }
+        });
 
         fileInput.addEventListener('change', (e) => {
             if (e.target.files.length > 0) {
@@ -555,7 +679,7 @@ class App {
         try {
             this.connection = new WebRTCConnection();
             this.connection.onStatusChange = (status) => this.updateSendStatus(status);
-            this.connection.onProgress = (progress) => this.updateSendProgress(progress);
+            this.connection.onProgress = (progress, speed) => this.updateSendProgress(progress, speed);
 
             const code = await this.connection.createRoom();
 
@@ -616,7 +740,7 @@ class App {
         try {
             this.connection = new WebRTCConnection();
             this.connection.onStatusChange = (status) => this.updateReceiveStatus(status);
-            this.connection.onProgress = (progress) => this.updateReceiveProgress(progress);
+            this.connection.onProgress = (progress, speed) => this.updateReceiveProgress(progress, speed);
             this.connection.onFileReceive = (event) => this.handleFileReceive(event);
 
             await this.connection.joinRoom(code);
@@ -676,14 +800,32 @@ class App {
         }
     }
 
-    updateSendProgress(progress) {
+    updateSendProgress(progress, speed) {
         document.getElementById('progress-fill').style.width = `${progress}%`;
-        document.getElementById('progress-text').textContent = `${progress}%`;
+        let text = `${progress}%`;
+        if (speed) {
+            text += ` · ${this.formatSpeed(speed)}`;
+        }
+        document.getElementById('progress-text').textContent = text;
     }
 
-    updateReceiveProgress(progress) {
+    updateReceiveProgress(progress, speed) {
         document.getElementById('receive-progress-fill').style.width = `${progress}%`;
-        document.getElementById('receive-progress-text').textContent = `${progress}%`;
+        let text = `${progress}%`;
+        if (speed) {
+            text += ` · ${this.formatSpeed(speed)}`;
+        }
+        document.getElementById('receive-progress-text').textContent = text;
+    }
+
+    formatSpeed(bytesPerSecond) {
+        if (bytesPerSecond < 1024) {
+            return `${bytesPerSecond.toFixed(0)} B/s`;
+        } else if (bytesPerSecond < 1024 * 1024) {
+            return `${(bytesPerSecond / 1024).toFixed(1)} KB/s`;
+        } else {
+            return `${(bytesPerSecond / 1024 / 1024).toFixed(2)} MB/s`;
+        }
     }
 
     formatSize(bytes) {
