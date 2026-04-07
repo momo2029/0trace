@@ -1,128 +1,127 @@
 # 0trace
 
-> 零隐私 P2P 文件传输工具 - 基于 WebRTC 点对点技术
+> Zero-Privacy P2P File Transfer - WebRTC-based peer-to-peer file sharing
 
 [![Demo](https://img.shields.io/badge/demo-0trace.org-blue)](https://0trace.org)
 [![GitHub](https://img.shields.io/badge/github-momo2029/0trace-green)](https://github.com/momo2029/0trace)
 [![License](https://img.shields.io/badge/license-MIT-orange)](LICENSE)
 
-[English](README_EN.md) | 简体中文
+[日本語](README.ja.md) | [한국어](README.ko.md) | [Español](README.es.md) | [Français](README.fr.md)
 
-## ✨ 特性
+## ✨ Features
 
-- 🔒 **零隐私** - 文件通过 WebRTC P2P 直传，服务器不存储任何数据
-- 🚀 **极致轻量** - Rust 后端 < 5MB，前端纯 JavaScript 无框架
-- 📦 **开箱即用** - 浏览器打开即用，无需注册或安装
-- 🌐 **跨网络传输** - 支持 NAT 穿透，不限局域网
-- 🌍 **多语言支持** - 中文、英语、日语、韩语、西班牙语、法语
-- ⚡ **实时进度** - 256KB 分块传输，实时显示进度
+- 🔒 **Zero Privacy** - Files transferred via WebRTC P2P, server stores nothing
+- 🚀 **Ultra Lightweight** - Rust backend < 5MB, pure JavaScript frontend, no frameworks
+- 📦 **Ready to Use** - Open in browser, no registration or installation needed
+- 🌐 **Cross-Network** - NAT traversal supported, not limited to LAN
+- 🌍 **Multilingual** - Chinese, English, Japanese, Korean, Spanish, French
+- ⚡ **Real-time Progress** - 256KB chunked transfer with live progress
 
-## 🚀 快速开始
+## 🚀 Quick Start
 
-### 在线使用
+### Use Online
 
-访问 [0trace.org](https://0trace.org) 立即开始传输文件
+Visit [0trace.org](https://0trace.org) to start transferring files immediately
 
-### 本地部署
+### Local Deployment
 
-**方式一：Docker（推荐）**
+**Method 1: Docker (Recommended)**
 
 ```bash
 docker run -d -p 2029:2029 ghcr.io/momo2029/0trace:latest
 ```
 
-访问 http://localhost:2029
+Access http://localhost:2029
 
-**方式二：从源码编译**
+**Method 2: Build from Source**
 
 ```bash
-# 克隆项目
+# Clone repository
 git clone https://github.com/momo2029/0trace
 cd 0trace
 
-# 运行（需要 Rust 1.75+）
+# Run (requires Rust 1.75+)
 make dev
 ```
 
-## 📖 使用方法
+## 📖 Usage
 
-### 发送文件
+### Send Files
 
-1. 打开 [0trace.org](https://0trace.org)
-2. 选择「发送文件」标签
-3. 点击或拖拽文件/文件夹
-4. 点击「复制链接」
-5. 将链接发送给接收方（微信/QQ/邮件等）
+1. Open [0trace.org](https://0trace.org)
+2. Select "Send Files" tab
+3. Click or drag-drop files/folders
+4. Click "Copy Link"
+5. Share the link with receiver (WeChat/QQ/Email/etc.)
 
-### 接收文件
+### Receive Files
 
-**方式一：点击链接（推荐）**
-- 接收方点击分享链接
-- 自动开始接收，无需任何操作
+**Method 1: Click Link (Recommended)**
+- Receiver clicks the shared link
+- Auto-receives, no manual steps needed
 
-**方式二：手动输入**
-- 选择「接收文件」标签
-- 输入 6 位取件码
-- 点击「加入房间」
+**Method 2: Manual Entry**
+- Select "Receive Files" tab
+- Enter 6-digit pickup code
+- Click "Join Room"
 
-## 🏗️ 技术架构
+## 🏗️ Architecture
 
 ```
-发送方 ←── WebSocket 信令 ──→ Rust 后端 ←── WebSocket 信令 ──→ 接收方
-   │                                                              │
-   └──────────────── WebRTC P2P 直连（文件数据） ──────────────────┘
+Sender ←── WebSocket Signaling ──→ Rust Backend ←── WebSocket Signaling ──→ Receiver
+   │                                                                             │
+   └─────────────────────── WebRTC P2P Direct Transfer (File Data) ──────────────┘
 ```
 
-**技术栈：**
-- 后端：Rust + Axum + Tokio + WebSocket
-- 前端：原生 JavaScript + WebRTC API
-- 协议：WebRTC DataChannel + 自定义传输协议
+**Tech Stack:**
+- Backend: Rust + Axum + Tokio + WebSocket
+- Frontend: Vanilla JavaScript + WebRTC API
+- Protocol: WebRTC DataChannel + Custom Transfer Protocol
 
-详见 [ARCHITECTURE.md](ARCHITECTURE.md)
+See [ARCHITECTURE.md](ARCHITECTURE.md) for details
 
-## 🔒 安全性
+## 🔒 Security
 
-- ✅ WebRTC 自带 DTLS/SRTP 加密
-- ✅ 服务器零数据留存（仅转发信令）
-- ✅ 取件码空间 34^6 ≈ 15 亿
-- ✅ 房间 1 小时自动过期
+- ✅ WebRTC provides built-in DTLS/SRTP encryption
+- ✅ Zero data retention on server (signaling only)
+- ✅ Pickup code space 34^6 ≈ 1.5 billion combinations
+- ✅ Room auto-expires after 1 hour
 
-## ⚠️ 限制
+## ⚠️ Limitations
 
-- 房间最多 2 人（1 发送 + 1 接收）
-- 文件大小受限于浏览器内存
-- 对称 NAT 需要 TURN 服务器（默认未配置）
+- Max 2 people per room (1 sender + 1 receiver)
+- File size limited by browser memory
+- Symmetric NAT requires TURN server (not configured by default)
 
-## 🛠️ 开发
+## 🛠️ Development
 
-详见 [CONTRIBUTING.md](CONTRIBUTING.md)
+See [CONTRIBUTING.md](CONTRIBUTING.md)
 
 ```bash
-# 开发模式（热更新）
+# Development mode (hot reload)
 ./dev.sh
 
-# 运行测试
+# Run tests
 make test
 
-# 构建生产版本
+# Build for production
 make build
 ```
 
-## 📝 许可证
+## 📝 License
 
 [MIT License](LICENSE)
 
-## 🙏 致谢
+## 🙏 Acknowledgments
 
+## 🤝 Contributing
 
-## 🤝 贡献
+Issues and Pull Requests are welcome!
 
-欢迎提交 Issue 和 Pull Request！
+Please read [Contributing Guide](CONTRIBUTING.md) before submitting PRs
 
-在提交 PR 前，请阅读 [贡献指南](CONTRIBUTING.md)
+## 📧 Contact
 
-## 📧 联系
-
-- 项目主页：https://github.com/momo2029/0trace
-- 演示站点：https://0trace.org
-- 问题反馈：https://github.com/momo2029/0trace/issues
+- Project Homepage: https://github.com/momo2029/0trace
+- Demo Site: https://0trace.org
+- Issue Tracker: https://github.com/momo2029/0trace/issues
