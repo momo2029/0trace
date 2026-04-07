@@ -1,7 +1,7 @@
 {
   "app": {
     "title": "0trace",
-    "subtitle": "零隐私 · 点对点 · 无需注册"
+    "subtitle": "零痕迹 · 点对点 · 无需注册"
   },
   "tabs": {
     "send": "发送文件",
@@ -69,7 +69,14 @@
     "opensource": "开源项目",
     "opensourceText": "本项目在 MIT 许可证下开源。源代码可在 GitHub 上获取。我们欢迎贡献和反馈。"
   },
-  "language": {
-    "name": "简体中文"
-  }
-}
+   "language": {
+     "name": "简体中文"
+   },
+   "intro": {
+     "title": "什么是 0trace？",
+     "description": "0trace 是一款基于 WebRTC 的点对点（P2P）文件传输工具。文件直接在您的设备和接收方之间传输，不经过服务器存储，速度快且保护隐私。",
+     "howToSend": "发送文件：上传 → 复制链接 → 发送给对方",
+     "howToReceive": "接收文件：打开链接 → 自动开始接收（无需登录）",
+     "note": "注意：发送方和接收方需同时在线，传输期间请保持页面打开。"
+   }
+ }

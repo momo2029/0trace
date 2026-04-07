@@ -69,7 +69,14 @@
     "opensource": "Open Source Project",
     "opensourceText": "This project is open source under the MIT license. Source code is available on GitHub. We welcome contributions and feedback."
   },
-  "language": {
-    "name": "English"
-  }
-}
+   "language": {
+     "name": "English"
+   },
+   "intro": {
+     "title": "What is 0trace?",
+     "description": "0trace is a WebRTC-based peer-to-peer (P2P) file transfer tool. Files are transferred directly between your device and the receiver, without being stored on any server. Fast and privacy-friendly.",
+     "howToSend": "Send files: Upload → Copy link → Share with receiver",
+     "howToReceive": "Receive files: Open link → Auto-receive (no login needed)",
+     "note": "Note: Both sender and receiver must be online at the same time. Keep the page open during transfer."
+   }
+ }
