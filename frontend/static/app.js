@@ -25,6 +25,12 @@ class WebRTCConnection {
         // 流式写入
         this.fileWriter = null;
         this.useStreaming = false;
+
+        // 保活机制
+        this.heartbeatInterval = null;
+        this.reconnectAttempts = 0;
+        this.maxReconnectAttempts = 5;
+        this.isIntentionalClose = false;
     }
 
     // 创建房间
@@ -71,9 +77,45 @@ class WebRTCConnection {
 
             this.ws.onclose = () => {
                 console.log('WebSocket closed');
-                this.updateStatus('disconnected');
+                this.stopHeartbeat();
+
+                // 如果不是主动关闭，尝试重连
+                if (!this.isIntentionalClose && this.reconnectAttempts < this.maxReconnectAttempts) {
+                    this.reconnectAttempts++;
+                    console.log(`Reconnecting... (${this.reconnectAttempts}/${this.maxReconnectAttempts})`);
+                    setTimeout(() => {
+                        this.connect(this.role);
+                    }, 2000 * this.reconnectAttempts); // 递增延迟
+                } else {
+                    this.updateStatus('disconnected');
+                }
             };
+
+            this.ws.onerror = (error) => {
+                console.error('WebSocket error:', error);
+            };
+
+            // 启动心跳
+            this.startHeartbeat();
         });
+    }
+
+    // 启动心跳保活
+    startHeartbeat() {
+        this.stopHeartbeat();
+        this.heartbeatInterval = setInterval(() => {
+            if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+                this.ws.send(JSON.stringify({ type: 'ping' }));
+            }
+        }, 30000); // 每 30 秒发送一次心跳
+    }
+
+    // 停止心跳
+    stopHeartbeat() {
+        if (this.heartbeatInterval) {
+            clearInterval(this.heartbeatInterval);
+            this.heartbeatInterval = null;
+        }
     }
 
     // 设置 PeerConnection
@@ -104,6 +146,16 @@ class WebRTCConnection {
             console.log('ICE connection state:', this.pc.iceConnectionState);
             console.log('ICE gathering state:', this.pc.iceGatheringState);
             this.updateStatus(this.pc.connectionState);
+
+            // WebRTC 连接断开时尝试重连
+            if (this.pc.connectionState === 'failed' || this.pc.connectionState === 'disconnected') {
+                console.log('WebRTC connection lost, attempting to reconnect...');
+                setTimeout(() => {
+                    if (this.pc.connectionState !== 'connected') {
+                        this.restartIce();
+                    }
+                }, 3000);
+            }
         };
 
         this.pc.onicecandidateerror = (event) => {
@@ -430,8 +482,18 @@ class WebRTCConnection {
         return this.speedStats.currentSpeed;
     }
 
+    // 重启 ICE（尝试恢复连接）
+    restartIce() {
+        if (!this.pc) return;
+
+        console.log('Restarting ICE...');
+        this.pc.restartIce();
+    }
+
     // 关闭连接
     close() {
+        this.isIntentionalClose = true;
+        this.stopHeartbeat();
         if (this.dc) this.dc.close();
         if (this.pc) this.pc.close();
         if (this.ws) this.ws.close();
