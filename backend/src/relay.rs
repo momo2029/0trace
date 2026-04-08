@@ -118,9 +118,14 @@ pub async fn handle_relay(socket: WebSocket, code: String, role: String, manager
     let role_clone = role.clone();
     let mut recv_task = tokio::spawn(async move {
         while let Some(Ok(msg)) = ws_rx.next().await {
-            // 文本控制消息不转发
-            if let Message::Text(_) = &msg {
-                continue;
+            // 过滤客户端发来的 relay 控制消息（ping 等），其余全部转发
+            if let Message::Text(ref text) = msg {
+                if let Ok(v) = serde_json::from_str::<serde_json::Value>(text) {
+                    let t = v["type"].as_str().unwrap_or("");
+                    if t.starts_with("relay-") || t == "ping" {
+                        continue;
+                    }
+                }
             }
             if let Some(peer) = manager_clone.get_peer(&code_clone, &role_clone).await {
                 let _ = peer.send(msg);
