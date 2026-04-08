@@ -917,13 +917,14 @@ class App {
 
                 // 等待连接后发送文件
                 const checkConnection = setInterval(() => {
-                    if (this.connection.dc && this.connection.dc.readyState === 'open') {
+                    const c = this.connection;
+                    const ready = (c.isRelay && c.relayWs && c.relayWs.readyState === WebSocket.OPEN)
+                               || (c.dc && c.dc.readyState === 'open');
+                    if (ready) {
                         clearInterval(checkConnection);
                         this.sendFiles();
                         const progressEl = document.getElementById('progress');
-                        if (progressEl) {
-                            progressEl.classList.remove('hidden');
-                        }
+                        if (progressEl) progressEl.classList.remove('hidden');
                     }
                 }, 500);
 
