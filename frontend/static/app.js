@@ -419,7 +419,7 @@ class WebRTCConnection {
             send(arrayBuffer);
             sentBytes += arrayBuffer.byteLength;
             this.calculateSpeed(sentBytes);
-            this.updateProgress(Math.round(((i + 1) / totalChunks) * 100));
+            this.updateProgress(Math.round(((i + 1) / totalChunks) * 100), sentBytes, file.size);
         }
 
         // 发送完成消息
@@ -563,9 +563,9 @@ class WebRTCConnection {
     }
 
     // 更新进度
-    updateProgress(progress) {
+    updateProgress(progress, sentBytes, totalBytes) {
         if (this.onProgress) {
-            this.onProgress(progress, this.speedStats.currentSpeed);
+            this.onProgress(progress, this.speedStats.currentSpeed, sentBytes, totalBytes);
         }
     }
 
@@ -1068,11 +1068,11 @@ class App {
         }
     }
 
-    updateSendProgress(progress, speed) {
+    updateSendProgress(progress, speed, sentBytes, totalBytes) {
         document.getElementById('progress-fill').style.width = `${progress}%`;
         let text = `${progress}%`;
-        if (speed) {
-            text += ` · ${this.formatSpeed(speed)}`;
+        if (sentBytes != null && totalBytes != null) {
+            text += ` · ${this.formatSize(sentBytes)} / ${this.formatSize(totalBytes)}`;
         }
         document.getElementById('progress-text').textContent = text;
     }
