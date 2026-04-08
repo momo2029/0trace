@@ -28,7 +28,8 @@
     "linkCopied": "공유 링크가 복사되었습니다! 수신자에게 보내서 전송을 시작하세요",
     "allFilesSent": "모든 파일 전송이 완료되었습니다!",
     "createRoomFailed": "방 생성 실패",
-    "folderDragNotSupported": "폴더 드래그는 지원되지 않습니다. '폴더 선택' 버튼을 사용하세요"
+    "folderDragNotSupported": "폴더 드래그는 지원되지 않습니다. '폴더 선택' 버튼을 사용하세요",
+    "scanQR": "스캔하여 수신"
   },
   "receive": {
     "notice": "팁: 링크를 받으면 즉시 열어주세요. 발신자는 온라인 상태를 유지해야 합니다.",

@@ -28,7 +28,8 @@
     "linkCopied": "Share link copied! Send it to the receiver to start transfer",
     "allFilesSent": "All files sent successfully!",
     "createRoomFailed": "Failed to create room",
-    "folderDragNotSupported": "Folder drag not supported, please use 'Select Folder' button"
+    "folderDragNotSupported": "Folder drag not supported, please use 'Select Folder' button",
+    "scanQR": "Scan to receive"
   },
   "receive": {
     "notice": "Tip: Open the link immediately after receiving it, the sender must stay online.",
@@ -69,13 +70,13 @@
     "opensource": "Open Source Project",
     "opensourceText": "This project is open source under the MIT license. Source code is available on GitHub. We welcome contributions and feedback."
   },
-   "language": {
-     "name": "English"
-   },
-   "intro": {
-     "title": "What is 0trace?",
-     "description": "0trace is a WebRTC-based peer-to-peer (P2P) file transfer tool. Files are transferred directly between your device and the receiver, without being stored on any server. Fast and privacy-friendly.",
-     "howToSend": "Send files: Upload → Copy link → Share with receiver",
-     "howToReceive": "Receive files: Open link → Auto-receive (no login needed)"
-   }
- }
+  "language": {
+    "name": "English"
+  },
+  "intro": {
+    "title": "What is 0trace?",
+    "description": "0trace is a WebRTC-based peer-to-peer (P2P) file transfer tool. Files are transferred directly between your device and the receiver, without being stored on any server. Fast and privacy-friendly.",
+    "howToSend": "Send files: Upload → Copy link → Share with receiver",
+    "howToReceive": "Receive files: Open link → Auto-receive (no login needed)"
+  }
+}

@@ -836,6 +836,11 @@ class App {
                         colorLight: '#ffffff',
                         correctLevel: QRCode.CorrectLevel.M
                     });
+                    const label = document.createElement('p');
+                    label.className = 'qrcode-label';
+                    label.setAttribute('data-i18n', 'send.scanQR');
+                    label.textContent = i18n.t('send.scanQR');
+                    qrcodeSticker.appendChild(label);
                 }
 
                 // 等待连接后发送文件

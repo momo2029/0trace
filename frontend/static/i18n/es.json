@@ -28,7 +28,8 @@
     "linkCopied": "¡Enlace copiado! Envíalo al receptor para iniciar la transferencia",
     "allFilesSent": "¡Todos los archivos enviados con éxito!",
     "createRoomFailed": "Error al crear la sala",
-    "folderDragNotSupported": "Arrastrar carpetas no está soportado, use el botón 'Seleccionar Carpeta'"
+    "folderDragNotSupported": "Arrastrar carpetas no está soportado, use el botón 'Seleccionar Carpeta'",
+    "scanQR": "Escanear para recibir"
   },
   "receive": {
     "notice": "Consejo: Abre el enlace inmediatamente después de recibirlo, el remitente debe permanecer en línea.",
@@ -69,13 +70,13 @@
     "opensource": "Proyecto de Código Abierto",
     "opensourceText": "Este proyecto es de código abierto bajo la licencia MIT. El código fuente está disponible en GitHub. Damos la bienvenida a contribuciones y comentarios."
   },
-   "language": {
-     "name": "Español"
-   },
-   "intro": {
-     "title": "¿Qué es 0trace?",
-     "description": "0trace es una herramienta de transferencia de archivos P2P basada en WebRTC. Los archivos se transfieren directamente entre su dispositivo y el receptor, sin almacenarse en ningún servidor. Rápido y amigable con la privacidad.",
-     "howToSend": "Enviar archivos: Subir → Copiar enlace → Compartir con el receptor",
-     "howToReceive": "Recibir archivos: Abrir enlace → Recepción automática (no requiere inicio de sesión)"
-   }
- }
+  "language": {
+    "name": "Español"
+  },
+  "intro": {
+    "title": "¿Qué es 0trace?",
+    "description": "0trace es una herramienta de transferencia de archivos P2P basada en WebRTC. Los archivos se transfieren directamente entre su dispositivo y el receptor, sin almacenarse en ningún servidor. Rápido y amigable con la privacidad.",
+    "howToSend": "Enviar archivos: Subir → Copiar enlace → Compartir con el receptor",
+    "howToReceive": "Recibir archivos: Abrir enlace → Recepción automática (no requiere inicio de sesión)"
+  }
+}

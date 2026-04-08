@@ -475,8 +475,7 @@ button.secondary:hover {
     border-radius: 8px;
 }
 
-.qrcode-sticker::after {
-    content: '扫码接收';
+.qrcode-label {
     font-size: 0.8rem;
     color: var(--text-dark);
     font-weight: 600;
