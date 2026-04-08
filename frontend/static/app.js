@@ -15,6 +15,9 @@ class WebRTCConnection {
         this.receivedSize = 0;
         this.fileMetadata = null;
 
+        // ICE candidate 缓存（remote description 设置前）
+        this.pendingCandidates = [];
+
         // 速度统计
         this.speedStats = {
             lastTime: 0,
@@ -30,6 +33,11 @@ class WebRTCConnection {
         this.heartbeatInterval = null;
         this.reconnectAttempts = 0;
         this.isIntentionalClose = false;
+
+        // Relay 降级
+        this.relayWs = null;
+        this.isRelay = false;
+        this.p2pTimeout = null;
     }
 
     // 创建房间
@@ -181,15 +189,16 @@ class WebRTCConnection {
 
         this.pc.onconnectionstatechange = () => {
             console.log('Connection state:', this.pc.connectionState);
-            console.log('ICE connection state:', this.pc.iceConnectionState);
-            console.log('ICE gathering state:', this.pc.iceGatheringState);
             this.updateStatus(this.pc.connectionState);
 
-            // WebRTC 连接断开时尝试重连
-            if (this.pc.connectionState === 'failed' || this.pc.connectionState === 'disconnected') {
-                console.log('WebRTC connection lost, attempting to reconnect...');
+            if (this.pc.connectionState === 'connected') {
+                // P2P 成功，清除降级定时器
+                if (this.p2pTimeout) { clearTimeout(this.p2pTimeout); this.p2pTimeout = null; }
+            } else if (this.pc.connectionState === 'failed') {
+                this._initiateRelay();
+            } else if (this.pc.connectionState === 'disconnected') {
                 setTimeout(() => {
-                    if (this.pc.connectionState !== 'connected') {
+                    if (this.pc && this.pc.connectionState !== 'connected') {
                         this.restartIce();
                     }
                 }, 3000);
@@ -256,48 +265,111 @@ class WebRTCConnection {
 
         switch (message.type) {
             case 'peer-joined':
-                console.log('Peer joined');
-                if (this.role === 'sender') {
+                console.log('Peer joined:', message.role);
+                if (this.role === 'sender' && message.role === 'receiver') {
                     const state = this.pc?.signalingState;
                     if (state === 'stable' && (!this.dc || this.dc.readyState !== 'open')) {
                         this.createOffer();
+                        // 15s 内未建连则降级 relay
+                        if (this.p2pTimeout) clearTimeout(this.p2pTimeout);
+                        this.p2pTimeout = setTimeout(() => {
+                            if (!this.isRelay && (!this.dc || this.dc.readyState !== 'open')) {
+                                console.log('P2P timeout, falling back to relay');
+                                this._initiateRelay();
+                            }
+                        }, 15000);
                     }
                 }
                 break;
 
             case 'offer':
-                await this.pc.setRemoteDescription({
-                    type: 'offer',
-                    sdp: message.sdp
-                });
+                await this.pc.setRemoteDescription({ type: 'offer', sdp: message.sdp });
+                await this._flushCandidates();
                 const answer = await this.pc.createAnswer();
                 await this.pc.setLocalDescription(answer);
-                this.sendSignal({
-                    type: 'answer',
-                    sdp: answer.sdp
-                });
+                this.sendSignal({ type: 'answer', sdp: answer.sdp });
                 break;
 
             case 'answer':
-                await this.pc.setRemoteDescription({
-                    type: 'answer',
-                    sdp: message.sdp
-                });
+                await this.pc.setRemoteDescription({ type: 'answer', sdp: message.sdp });
+                await this._flushCandidates();
                 break;
 
             case 'ice-candidate':
                 const candidate = JSON.parse(message.candidate);
-                await this.pc.addIceCandidate(candidate);
+                if (this.pc.remoteDescription) {
+                    await this.pc.addIceCandidate(candidate);
+                } else {
+                    this.pendingCandidates.push(candidate);
+                }
                 break;
 
             case 'peer-left':
                 this.updateStatus('peer-left');
                 break;
 
+            case 'relay-request':
+                console.log('Peer requested relay fallback');
+                this._connectRelay();
+                break;
+
             case 'error':
                 console.error('Signal error:', message.message);
                 break;
         }
+    }
+
+    // 发起 relay 降级
+    _initiateRelay() {
+        if (this.isRelay) return;
+        // 通知对方也切换 relay
+        this.sendSignal({ type: 'relay-request' });
+        this._connectRelay();
+    }
+
+    // 连接 relay WS
+    _connectRelay() {
+        if (this.isRelay) return;
+        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const url = `${protocol}//${window.location.host}/api/relay?code=${this.code}&role=${this.role}`;
+        this.relayWs = new WebSocket(url);
+        this.relayWs.binaryType = 'arraybuffer';
+
+        this.relayWs.onmessage = (event) => {
+            if (typeof event.data === 'string') {
+                const msg = JSON.parse(event.data);
+                if (msg.type === 'relay-ready' || msg.type === 'relay-peer-joined') {
+                    this.isRelay = true;
+                    this.updateStatus('connected');
+                    console.log('Relay connected');
+                } else if (msg.type === 'relay-peer-left') {
+                    this.updateStatus('peer-left');
+                } else {
+                    // file-meta / chunk-info / complete 等传输消息
+                    this.handleDataMessage(msg);
+                }
+            } else {
+                this.handleFileChunk(event.data);
+            }
+        };
+
+        this.relayWs.onopen = () => console.log('Relay WS open');
+        this.relayWs.onerror = (e) => console.error('Relay WS error:', e);
+    }
+
+    // relay 模式发送数据
+    _relaySend(data) {
+        if (this.relayWs && this.relayWs.readyState === WebSocket.OPEN) {
+            this.relayWs.send(data);
+        }
+    }
+
+    // 刷新缓存的 ICE candidate
+    async _flushCandidates() {
+        for (const c of this.pendingCandidates) {
+            await this.pc.addIceCandidate(c);
+        }
+        this.pendingCandidates = [];
     }
 
     // 发送信令消息
@@ -309,53 +381,49 @@ class WebRTCConnection {
 
     // 发送文件
     async sendFile(file) {
-        if (!this.dc || this.dc.readyState !== 'open') {
-            throw new Error('DataChannel not ready');
-        }
+        const ready = this.isRelay
+            ? (this.relayWs && this.relayWs.readyState === WebSocket.OPEN)
+            : (this.dc && this.dc.readyState === 'open');
+        if (!ready) throw new Error('Transport not ready');
+
+        const send = (data) => this.isRelay ? this._relaySend(data) : this.dc.send(data);
 
         // 发送文件元信息
-        const metadata = {
-            type: 'file-meta',
-            name: file.name,
-            size: file.size,
-            mimeType: file.type
-        };
-        this.dc.send(JSON.stringify(metadata));
+        const metadata = { type: 'file-meta', name: file.name, size: file.size, mimeType: file.type };
+        send(JSON.stringify(metadata));
 
         // 分块发送
-        const chunkSize = 256 * 1024; // 256KB
+        const chunkSize = 256 * 1024;
         const totalChunks = Math.ceil(file.size / chunkSize);
         let sentBytes = 0;
+
+        // 背压控制（仅 P2P DataChannel 模式）
+        const BUFFER_HIGH = 4 * 1024 * 1024;
+        const BUFFER_LOW  = 1 * 1024 * 1024;
+        if (!this.isRelay && this.dc) this.dc.bufferedAmountLowThreshold = BUFFER_LOW;
 
         for (let i = 0; i < totalChunks; i++) {
             const start = i * chunkSize;
             const end = Math.min(start + chunkSize, file.size);
-            const chunk = file.slice(start, end);
+            const arrayBuffer = await file.slice(start, end).arrayBuffer();
 
-            // 发送块信息
-            this.dc.send(JSON.stringify({
-                type: 'chunk-info',
-                index: i,
-                total: totalChunks
-            }));
+            send(JSON.stringify({ type: 'chunk-info', index: i, total: totalChunks }));
 
-            // 发送块数据
-            const arrayBuffer = await chunk.arrayBuffer();
-            this.dc.send(arrayBuffer);
+            // P2P 模式背压等待
+            if (!this.isRelay && this.dc && this.dc.bufferedAmount > BUFFER_HIGH) {
+                await new Promise(resolve => {
+                    this.dc.onbufferedamountlow = () => { this.dc.onbufferedamountlow = null; resolve(); };
+                });
+            }
 
+            send(arrayBuffer);
             sentBytes += arrayBuffer.byteLength;
             this.calculateSpeed(sentBytes);
-
-            // 更新进度
-            const progress = Math.round(((i + 1) / totalChunks) * 100);
-            this.updateProgress(progress);
-
-            // 等待一下，避免发送过快
-            await new Promise(resolve => setTimeout(resolve, 10));
+            this.updateProgress(Math.round(((i + 1) / totalChunks) * 100));
         }
 
         // 发送完成消息
-        this.dc.send(JSON.stringify({ type: 'complete' }));
+        send(JSON.stringify({ type: 'complete' }));
         console.log('File sent successfully');
     }
 
@@ -533,10 +601,12 @@ class WebRTCConnection {
     // 关闭连接
     close() {
         this.isIntentionalClose = true;
+        if (this.p2pTimeout) { clearTimeout(this.p2pTimeout); this.p2pTimeout = null; }
         this.stopHeartbeat();
         if (this.dc) this.dc.close();
         if (this.pc) this.pc.close();
         if (this.ws) this.ws.close();
+        if (this.relayWs) this.relayWs.close();
     }
 }
 

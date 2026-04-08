@@ -1,5 +1,6 @@
 mod room;
 mod ws;
+mod relay;
 
 use axum::{
     extract::{Query, State, WebSocketUpgrade},
@@ -9,6 +10,7 @@ use axum::{
     Router,
 };
 use room::RoomManager;
+use relay::RelayManager;
 use serde::{Deserialize, Serialize};
 use shared::Role;
 use tower_http::{cors::CorsLayer, services::ServeDir};
@@ -17,6 +19,7 @@ use tracing::info;
 #[derive(Clone)]
 struct AppState {
     room_manager: RoomManager,
+    relay_manager: RelayManager,
 }
 
 #[tokio::main]
@@ -29,6 +32,7 @@ async fn main() {
         .init();
 
     let room_manager = RoomManager::new();
+    let relay_manager = RelayManager::new();
 
     // 定期清理过期房间
     let room_manager_clone = room_manager.clone();
@@ -41,7 +45,7 @@ async fn main() {
         }
     });
 
-    let state = AppState { room_manager };
+    let state = AppState { room_manager, relay_manager };
 
     // 静态文件路径：开发环境和生产环境自动适配
     let static_path = if std::path::Path::new("../frontend/static").exists() {
@@ -55,6 +59,7 @@ async fn main() {
         .route("/api/create-room", post(create_room_handler))
         .route("/api/room-info", get(room_info_handler))
         .route("/api/ws", get(ws_handler))
+        .route("/api/relay", get(relay_handler))
         .nest_service("/static", ServeDir::new(static_path))
         .layer(CorsLayer::permissive())
         .with_state(state);
@@ -141,4 +146,15 @@ async fn ws_handler(
     };
 
     ws.on_upgrade(move |socket| ws::handle_websocket(socket, query.code, role, state.room_manager))
+}
+
+async fn relay_handler(
+    ws: WebSocketUpgrade,
+    State(state): State<AppState>,
+    Query(query): Query<WsQuery>,
+) -> impl IntoResponse {
+    if query.role != "sender" && query.role != "receiver" {
+        return (StatusCode::BAD_REQUEST, "Invalid role").into_response();
+    }
+    ws.on_upgrade(move |socket| relay::handle_relay(socket, query.code, query.role, state.relay_manager))
 }
