@@ -425,6 +425,17 @@ class WebRTCConnection {
             this.updateProgress(Math.round(((i + 1) / totalChunks) * 100), sentBytes, file.size);
         }
 
+        // 等待 buffer 完全排空再发 complete
+        if (!this.isRelay && this.dc) {
+            await new Promise(resolve => {
+                const check = () => {
+                    if (this.dc.bufferedAmount === 0) resolve();
+                    else setTimeout(check, 100);
+                };
+                check();
+            });
+        }
+
         // 发送完成消息
         send(JSON.stringify({ type: 'complete' }));
         console.log('File sent successfully');
