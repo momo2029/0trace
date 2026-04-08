@@ -42,15 +42,9 @@ impl Room {
         self.update_activity();
         match role {
             Role::Sender => {
-                if self.sender.is_some() {
-                    return Err("Sender already exists".to_string());
-                }
                 self.sender = Some(Client { role, tx });
             }
             Role::Receiver => {
-                if self.receiver.is_some() {
-                    return Err("Receiver already exists".to_string());
-                }
                 self.receiver = Some(Client { role, tx });
             }
         }
