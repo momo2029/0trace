@@ -29,7 +29,6 @@ class WebRTCConnection {
         // 保活机制
         this.heartbeatInterval = null;
         this.reconnectAttempts = 0;
-        this.maxReconnectAttempts = 5;
         this.isIntentionalClose = false;
     }
 
@@ -62,7 +61,11 @@ class WebRTCConnection {
         return new Promise((resolve, reject) => {
             this.ws.onopen = () => {
                 console.log('WebSocket connected');
-                this.setupPeerConnection();
+                this.reconnectAttempts = 0;
+                // 只在首次连接时建立 PeerConnection
+                if (!this.pc) {
+                    this.setupPeerConnection();
+                }
                 resolve();
             };
 
@@ -79,25 +82,60 @@ class WebRTCConnection {
                 console.log('WebSocket closed');
                 this.stopHeartbeat();
 
-                // 如果不是主动关闭，尝试重连
-                if (!this.isIntentionalClose && this.reconnectAttempts < this.maxReconnectAttempts) {
+                if (!this.isIntentionalClose) {
                     this.reconnectAttempts++;
-                    console.log(`Reconnecting... (${this.reconnectAttempts}/${this.maxReconnectAttempts})`);
-                    setTimeout(() => {
-                        this.connect(this.role);
-                    }, 2000 * this.reconnectAttempts); // 递增延迟
+                    // 指数退避，最长 30 秒
+                    const delay = Math.min(1000 * Math.pow(2, this.reconnectAttempts - 1), 30000);
+                    console.log(`Reconnecting in ${delay}ms... (attempt ${this.reconnectAttempts})`);
+                    setTimeout(() => this.reconnectWS(), delay);
                 } else {
                     this.updateStatus('disconnected');
                 }
             };
 
-            this.ws.onerror = (error) => {
-                console.error('WebSocket error:', error);
-            };
-
             // 启动心跳
             this.startHeartbeat();
         });
+    }
+
+    // 仅重连 WebSocket，不重建 PeerConnection
+    reconnectWS() {
+        if (this.isIntentionalClose) return;
+        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const wsUrl = `${protocol}//${window.location.host}/api/ws?code=${this.code}&role=${this.role}`;
+        this.ws = new WebSocket(wsUrl);
+
+        this.ws.onopen = () => {
+            console.log('WebSocket reconnected');
+            this.reconnectAttempts = 0;
+            this.startHeartbeat();
+            // 如果 WebRTC 还没连上，重新触发信令（发送方等 peer-joined，接收方等 offer）
+            if (!this.dc || this.dc.readyState !== 'open') {
+                if (this.role === 'sender' && this.pc) {
+                    // 重置 PeerConnection 等待新的接收方
+                    this.pc.close();
+                    this.pc = null;
+                    this.dc = null;
+                    this.setupPeerConnection();
+                }
+            }
+        };
+
+        this.ws.onmessage = (event) => {
+            this.handleSignalMessage(JSON.parse(event.data));
+        };
+
+        this.ws.onclose = () => {
+            this.stopHeartbeat();
+            if (!this.isIntentionalClose) {
+                this.reconnectAttempts++;
+                const delay = Math.min(1000 * Math.pow(2, this.reconnectAttempts - 1), 30000);
+                console.log(`Reconnecting in ${delay}ms... (attempt ${this.reconnectAttempts})`);
+                setTimeout(() => this.reconnectWS(), delay);
+            }
+        };
+
+        this.ws.onerror = () => {};
     }
 
     // 启动心跳保活
