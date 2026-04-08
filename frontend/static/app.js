@@ -267,18 +267,21 @@ class WebRTCConnection {
             case 'peer-joined':
                 console.log('Peer joined:', message.role);
                 if (this.role === 'sender' && message.role === 'receiver') {
-                    const state = this.pc?.signalingState;
-                    if (state === 'stable' && (!this.dc || this.dc.readyState !== 'open')) {
-                        this.createOffer();
-                        // 15s 内未建连则降级 relay
-                        if (this.p2pTimeout) clearTimeout(this.p2pTimeout);
-                        this.p2pTimeout = setTimeout(() => {
-                            if (!this.isRelay && (!this.dc || this.dc.readyState !== 'open')) {
-                                console.log('P2P timeout, falling back to relay');
-                                this._initiateRelay();
-                            }
-                        }, 15000);
-                    }
+                    // 重置 PeerConnection，重新协商（接收方可能刷新重连）
+                    if (this.dc) { this.dc.close(); this.dc = null; }
+                    if (this.pc) { this.pc.close(); this.pc = null; }
+                    this.pendingCandidates = [];
+                    this.isRelay = false;
+                    this.setupPeerConnection();
+                    this.createOffer();
+                    // 15s 内未建连则降级 relay
+                    if (this.p2pTimeout) clearTimeout(this.p2pTimeout);
+                    this.p2pTimeout = setTimeout(() => {
+                        if (!this.isRelay && (!this.dc || this.dc.readyState !== 'open')) {
+                            console.log('P2P timeout, falling back to relay');
+                            this._initiateRelay();
+                        }
+                    }, 15000);
                 }
                 break;
 
