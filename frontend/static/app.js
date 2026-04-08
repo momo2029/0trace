@@ -257,9 +257,11 @@ class WebRTCConnection {
         switch (message.type) {
             case 'peer-joined':
                 console.log('Peer joined');
-                // 如果是发送方，收到对方加入后才创建 offer
                 if (this.role === 'sender') {
-                    this.createOffer();
+                    const state = this.pc?.signalingState;
+                    if (state === 'stable' && (!this.dc || this.dc.readyState !== 'open')) {
+                        this.createOffer();
+                    }
                 }
                 break;
 
