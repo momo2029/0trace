@@ -1,4 +1,5 @@
 use serde::{Deserialize, Serialize};
+use std::fmt;
 
 /// WebSocket 信令消息
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -33,14 +34,9 @@ pub enum TransferMessage {
         mime_type: String,
     },
     /// 文件块信息
-    ChunkInfo {
-        index: u32,
-        total: u32,
-    },
+    ChunkInfo { index: u32, total: u32 },
     /// 确认收到块
-    ChunkAck {
-        index: u32,
-    },
+    ChunkAck { index: u32 },
     /// 传输完成
     Complete,
     /// 取消传输
@@ -61,5 +57,26 @@ impl Role {
             Role::Sender => "sender",
             Role::Receiver => "receiver",
         }
+    }
+}
+
+impl TryFrom<&str> for Role {
+    type Error = ParseRoleError;
+
+    fn try_from(value: &str) -> Result<Self, Self::Error> {
+        match value {
+            "sender" => Ok(Role::Sender),
+            "receiver" => Ok(Role::Receiver),
+            _ => Err(ParseRoleError),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct ParseRoleError;
+
+impl fmt::Display for ParseRoleError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str("Invalid role")
     }
 }

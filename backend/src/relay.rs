@@ -1,9 +1,10 @@
 use axum::extract::ws::{Message, WebSocket};
 use futures_util::{SinkExt, StreamExt};
+use shared::Role;
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::{mpsc, RwLock};
-use tracing::{error, info};
+use tracing::info;
 
 type RelayTx = mpsc::UnboundedSender<Message>;
 
@@ -24,7 +25,7 @@ impl RelayManager {
         }
     }
 
-    async fn join(&self, code: &str, role: &str, tx: RelayTx) -> Result<Option<RelayTx>, String> {
+    async fn join(&self, code: &str, role: Role, tx: RelayTx) -> Option<RelayTx> {
         let mut rooms = self.rooms.write().await;
         let room = rooms.entry(code.to_string()).or_insert(RelayRoom {
             sender: None,
@@ -32,61 +33,60 @@ impl RelayManager {
         });
 
         let peer_tx = match role {
-            "sender" => {
+            Role::Sender => {
                 let peer = room.receiver.clone();
                 room.sender = Some(tx);
                 peer
             }
-            "receiver" => {
+            Role::Receiver => {
                 let peer = room.sender.clone();
                 room.receiver = Some(tx);
                 peer
             }
-            _ => return Err("invalid role".to_string()),
         };
 
-        Ok(peer_tx)
+        peer_tx
     }
 
-    async fn leave(&self, code: &str, role: &str) {
+    async fn leave(&self, code: &str, role: Role, tx: &RelayTx) {
         let mut rooms = self.rooms.write().await;
         if let Some(room) = rooms.get_mut(code) {
-            match role {
-                "sender" => room.sender = None,
-                "receiver" => room.receiver = None,
-                _ => {}
+            let slot = match role {
+                Role::Sender => &mut room.sender,
+                Role::Receiver => &mut room.receiver,
+            };
+
+            let should_remove = slot
+                .as_ref()
+                .is_some_and(|current| current.same_channel(tx));
+            if should_remove {
+                *slot = None;
             }
+
             if room.sender.is_none() && room.receiver.is_none() {
                 rooms.remove(code);
             }
         }
     }
 
-    async fn get_peer(&self, code: &str, role: &str) -> Option<RelayTx> {
+    async fn get_peer(&self, code: &str, role: Role) -> Option<RelayTx> {
         let rooms = self.rooms.read().await;
         let room = rooms.get(code)?;
         match role {
-            "sender" => room.receiver.clone(),
-            "receiver" => room.sender.clone(),
-            _ => None,
+            Role::Sender => room.receiver.clone(),
+            Role::Receiver => room.sender.clone(),
         }
     }
 }
 
-pub async fn handle_relay(socket: WebSocket, code: String, role: String, manager: RelayManager) {
+pub async fn handle_relay(socket: WebSocket, code: String, role: Role, manager: RelayManager) {
     let (mut ws_tx, mut ws_rx) = socket.split();
     let (tx, mut rx) = mpsc::unbounded_channel::<Message>();
 
     // 加入房间，获取对方 tx（如果已在线）
-    let peer_tx = match manager.join(&code, &role, tx.clone()).await {
-        Ok(p) => p,
-        Err(e) => {
-            error!("Relay join error: {}", e);
-            return;
-        }
-    };
+    let peer_tx = manager.join(&code, role, tx.clone()).await;
 
-    info!("Relay joined: {} as {}", code, role);
+    info!("Relay joined: {} as {:?}", code, role);
 
     // 通知自己：relay-ready，告知对方是否在线
     let ready_msg = serde_json::json!({
@@ -115,7 +115,6 @@ pub async fn handle_relay(socket: WebSocket, code: String, role: String, manager
     // 接收任务：转发给对方
     let manager_clone = manager.clone();
     let code_clone = code.clone();
-    let role_clone = role.clone();
     let mut recv_task = tokio::spawn(async move {
         while let Some(Ok(msg)) = ws_rx.next().await {
             // 过滤客户端发来的 relay 控制消息（ping 等），其余全部转发
@@ -127,7 +126,7 @@ pub async fn handle_relay(socket: WebSocket, code: String, role: String, manager
                     }
                 }
             }
-            if let Some(peer) = manager_clone.get_peer(&code_clone, &role_clone).await {
+            if let Some(peer) = manager_clone.get_peer(&code_clone, role).await {
                 let _ = peer.send(msg);
             }
         }
@@ -138,13 +137,37 @@ pub async fn handle_relay(socket: WebSocket, code: String, role: String, manager
         _ = &mut recv_task => send_task.abort(),
     }
 
-    manager.leave(&code, &role).await;
-    info!("Relay left: {} as {}", code, role);
+    manager.leave(&code, role, &tx).await;
+    info!("Relay left: {} as {:?}", code, role);
 
     // 通知对方离开
-    if let Some(peer) = manager.get_peer(&code, &role).await {
+    if let Some(peer) = manager.get_peer(&code, role).await {
         let _ = peer.send(Message::Text(
             serde_json::json!({ "type": "relay-peer-left" }).to_string(),
         ));
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[tokio::test]
+    async fn stale_leave_does_not_remove_newer_relay_connection() {
+        let manager = RelayManager::new();
+        let code = "12345678";
+
+        let (old_tx, _old_rx) = mpsc::unbounded_channel();
+        manager.join(code, Role::Sender, old_tx.clone()).await;
+
+        let (new_tx, _new_rx) = mpsc::unbounded_channel();
+        manager.join(code, Role::Sender, new_tx.clone()).await;
+
+        manager.leave(code, Role::Sender, &old_tx).await;
+
+        let rooms = manager.rooms.read().await;
+        let room = rooms.get(code).unwrap();
+        let sender = room.sender.as_ref().unwrap();
+        assert!(sender.same_channel(&new_tx));
     }
 }

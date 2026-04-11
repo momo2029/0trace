@@ -1,6 +1,6 @@
+mod relay;
 mod room;
 mod ws;
-mod relay;
 
 use axum::{
     extract::{Query, State, WebSocketUpgrade},
@@ -9,8 +9,8 @@ use axum::{
     routing::{get, post},
     Router,
 };
-use room::RoomManager;
 use relay::RelayManager;
+use room::RoomManager;
 use serde::{Deserialize, Serialize};
 use shared::Role;
 use tower_http::{cors::CorsLayer, services::ServeDir};
@@ -26,8 +26,7 @@ struct AppState {
 async fn main() {
     tracing_subscriber::fmt()
         .with_env_filter(
-            tracing_subscriber::EnvFilter::try_from_default_env()
-                .unwrap_or_else(|_| "info".into()),
+            tracing_subscriber::EnvFilter::try_from_default_env().unwrap_or_else(|_| "info".into()),
         )
         .init();
 
@@ -45,13 +44,16 @@ async fn main() {
         }
     });
 
-    let state = AppState { room_manager, relay_manager };
+    let state = AppState {
+        room_manager,
+        relay_manager,
+    };
 
     // 静态文件路径：开发环境和生产环境自动适配
     let static_path = if std::path::Path::new("../frontend/static").exists() {
         "../frontend/static" // 开发环境：从 backend/ 目录运行
     } else {
-        "frontend/static"    // 生产环境：从项目根目录运行
+        "frontend/static" // 生产环境：从项目根目录运行
     };
 
     let app = Router::new()
@@ -139,10 +141,9 @@ async fn ws_handler(
     State(state): State<AppState>,
     Query(query): Query<WsQuery>,
 ) -> impl IntoResponse {
-    let role = match query.role.as_str() {
-        "sender" => Role::Sender,
-        "receiver" => Role::Receiver,
-        _ => return (StatusCode::BAD_REQUEST, "Invalid role").into_response(),
+    let role = match Role::try_from(query.role.as_str()) {
+        Ok(role) => role,
+        Err(_) => return (StatusCode::BAD_REQUEST, "Invalid role").into_response(),
     };
 
     ws.on_upgrade(move |socket| ws::handle_websocket(socket, query.code, role, state.room_manager))
@@ -153,8 +154,10 @@ async fn relay_handler(
     State(state): State<AppState>,
     Query(query): Query<WsQuery>,
 ) -> impl IntoResponse {
-    if query.role != "sender" && query.role != "receiver" {
-        return (StatusCode::BAD_REQUEST, "Invalid role").into_response();
-    }
-    ws.on_upgrade(move |socket| relay::handle_relay(socket, query.code, query.role, state.relay_manager))
+    let role = match Role::try_from(query.role.as_str()) {
+        Ok(role) => role,
+        Err(_) => return (StatusCode::BAD_REQUEST, "Invalid role").into_response(),
+    };
+
+    ws.on_upgrade(move |socket| relay::handle_relay(socket, query.code, role, state.relay_manager))
 }

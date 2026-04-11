@@ -9,6 +9,7 @@ class WebRTCConnection {
         this.onFileReceive = null;
         this.onProgress = null;
         this.onStatusChange = null;
+        this.status = 'disconnected';
 
         // 接收缓冲区
         this.receiveBuffer = [];
@@ -61,6 +62,7 @@ class WebRTCConnection {
     // 建立 WebSocket 连接
     async connect(role) {
         this.role = role;
+        this.updateStatus('connecting');
         const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
         const wsUrl = `${protocol}//${window.location.host}/api/ws?code=${this.code}&role=${role}`;
 
@@ -91,6 +93,7 @@ class WebRTCConnection {
                 this.stopHeartbeat();
 
                 if (!this.isIntentionalClose) {
+                    this.updateStatus('connecting');
                     this.reconnectAttempts++;
                     // 指数退避，最长 30 秒
                     const delay = Math.min(1000 * Math.pow(2, this.reconnectAttempts - 1), 30000);
@@ -109,6 +112,7 @@ class WebRTCConnection {
     // 仅重连 WebSocket，不重建 PeerConnection
     reconnectWS() {
         if (this.isIntentionalClose) return;
+        this.updateStatus('connecting');
         const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
         const wsUrl = `${protocol}//${window.location.host}/api/ws?code=${this.code}&role=${this.role}`;
         this.ws = new WebSocket(wsUrl);
@@ -571,6 +575,7 @@ class WebRTCConnection {
 
     // 更新状态
     updateStatus(status) {
+        this.status = status;
         if (this.onStatusChange) {
             this.onStatusChange(status);
         }
@@ -1051,7 +1056,8 @@ class App {
             'connecting': i18n.t('send.connecting'),
             'connected': i18n.t('send.connected'),
             'disconnected': i18n.t('send.disconnected'),
-            'failed': i18n.t('send.failed')
+            'failed': i18n.t('send.failed'),
+            'peer-left': i18n.t('send.disconnected')
         };
         document.getElementById('status-text').textContent = statusMap[status] || status;
     }
@@ -1061,7 +1067,8 @@ class App {
             'connecting': i18n.t('send.connecting'),
             'connected': i18n.t('receive.receiving'),
             'disconnected': i18n.t('send.disconnected'),
-            'failed': i18n.t('send.failed')
+            'failed': i18n.t('send.failed'),
+            'peer-left': i18n.t('send.disconnected')
         };
         document.getElementById('receive-status-text').textContent = statusMap[status] || status;
     }
@@ -1073,11 +1080,11 @@ class App {
             const receiveStatus = document.getElementById('receive-status-text');
 
             if (sendStatus && !sendStatus.parentElement.parentElement.classList.contains('hidden')) {
-                this.updateSendStatus(this.connection.pc?.connectionState || 'connecting');
+                this.updateSendStatus(this.connection.status || 'connecting');
             }
 
             if (receiveStatus && !receiveStatus.parentElement.parentElement.classList.contains('hidden')) {
-                this.updateReceiveStatus(this.connection.pc?.connectionState || 'connecting');
+                this.updateReceiveStatus(this.connection.status || 'connecting');
             }
         }
     }
