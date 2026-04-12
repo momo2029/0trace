@@ -5,17 +5,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>0trace</title>
-    <meta name="description" content="Zero Privacy P2P File Transfer - WebRTC based peer-to-peer file sharing">
+    <meta name="description" content="Pure P2P encrypted chat and file transfer with WebRTC">
     <meta name="theme-color" content="#6366f1">
 
-    <!-- Favicon -->
     <link rel="icon" type="image/png" sizes="32x32" href="/static/images/favicon-32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="/static/images/favicon-16.png">
-
-    <!-- Apple Touch Icon -->
     <link rel="apple-touch-icon" href="/static/images/apple-touch-icon.png">
-
-    <!-- Web App Manifest -->
     <link rel="manifest" href="/static/site.webmanifest">
 
     <link rel="stylesheet" href="/static/style.css">
@@ -29,118 +24,107 @@
                     <img src="/static/images/logo.png" alt="0trace" class="logo">
                 </a>
             </div>
+            <p class="tagline" data-i18n="app.tagline">P2P 加密聊天和文件传输，不经过任何服务器</p>
+            <div class="features">
+                <span class="feature-tag" data-i18n="app.featureEncrypt">端到端加密</span>
+                <span class="feature-tag" data-i18n="app.featureP2P">点对点直连</span>
+                <span class="feature-tag" data-i18n="app.featureNoSign">无需注册</span>
+            </div>
         </header>
 
         <main>
-            <!-- 介绍区域 -->
-            <div class="intro">
-                <h3 data-i18n="intro.title">什么是 0trace？</h3>
-                <p data-i18n="intro.description">0trace 是一款基于 WebRTC 的点对点（P2P）文件传输工具。文件直接在您的设备和接收方之间传输，不经过服务器存储，速度快且保护隐私。</p>
-                <p><strong data-i18n="intro.howToSend">发送文件：上传 → 复制链接 → 发送给对方</strong></p>
-                <p><strong data-i18n="intro.howToReceive">接收文件：打开链接 → 自动开始接收（无需登录）</strong></p>
-            </div>
+            <section id="setup-shell" class="setup-shell">
+                <div class="setup-grid">
+                    <section class="setup-card setup-card-create">
+                        <div class="card-icon">+</div>
+                        <h3 data-i18n="session.createTitle">创建会话</h3>
+                        <p data-i18n="session.createHelp">创建加密会话，把链接发给对方即可开始。</p>
+                        <button id="create-room-btn" data-i18n="session.createButton">创建会话</button>
+                    </section>
 
-            <div class="tabs">
-                <button class="tab active" data-tab="send" data-i18n="tabs.send">发送文件</button>
-                <button class="tab" data-tab="receive" data-i18n="tabs.receive">接收文件</button>
-            </div>
+                    <section class="setup-card setup-card-join">
+                        <div class="card-icon">#</div>
+                        <h3 data-i18n="session.joinTitle">加入会话</h3>
+                        <p data-i18n="session.joinHelp">输入对方的 6 位房间码，或直接打开分享链接。</p>
 
-            <!-- 发送模式 -->
-            <div id="send-panel" class="panel active">
-                <div class="online-notice">
-                    <p data-i18n="send.notice">重要提示：请保持此页面打开，直到接收方完成下载。双方需同时在线才能传输文件。</p>
+                        <div class="code-input">
+                            <div class="code-input-boxes">
+                                <input type="text" class="code-box" maxlength="1" data-index="0" inputmode="text" placeholder="A">
+                                <input type="text" class="code-box" maxlength="1" data-index="1" inputmode="text" placeholder="B">
+                                <input type="text" class="code-box" maxlength="1" data-index="2" inputmode="text" placeholder="C">
+                                <input type="text" class="code-box" maxlength="1" data-index="3" inputmode="text" placeholder="D">
+                                <input type="text" class="code-box code-box-num" maxlength="1" data-index="4" inputmode="text" placeholder="2">
+                                <input type="text" class="code-box code-box-num" maxlength="1" data-index="5" inputmode="text" placeholder="3">
+                            </div>
+                            <button id="join-btn" data-i18n="session.joinButton">加入会话</button>
+                        </div>
+                    </section>
                 </div>
 
-                <div class="upload-area" id="upload-area">
-                    <input type="file" id="file-input" hidden multiple>
-                    <input type="file" id="folder-input" hidden webkitdirectory directory>
-                    <div class="upload-prompt">
-                        <p data-i18n="send.dragDrop">📁 拖拽文件/文件夹到这里</p>
-                        <div class="upload-buttons">
-                            <button id="select-file-btn" data-i18n="send.selectFile">选择文件</button>
-                            <button id="select-folder-btn" class="secondary"
-                                data-i18n="send.selectFolder">选择文件夹</button>
+                <div class="setup-footer">
+                    <p data-i18n="session.pureP2PNotice">纯 P2P 直连，不经服务器中转。连接失败请切换网络重试。</p>
+                </div>
+            </section>
+
+            <section id="session-panel" class="session-panel hidden">
+                <div class="session-topbar">
+                    <div>
+                        <div id="session-role-label" class="session-role-label"></div>
+                        <h3 data-i18n="session.panelTitle">安全会话</h3>
+                        <p id="session-code-line" class="session-code-line"></p>
+                    </div>
+                    <div class="session-status-group">
+                        <div id="connection-quality" class="connection-quality">
+                            <span class="quality-indicator good" data-quality="good">●</span>
+                            <span class="quality-indicator fair hidden" data-quality="fair">●</span>
+                            <span class="quality-indicator poor hidden" data-quality="poor">●</span>
+                        </div>
+                        <div id="session-status-badge" class="session-status-badge">
+                            <span class="status-dot"></span>
+                            <span id="session-status-text" data-i18n="session.waitingPeer">等待对方加入</span>
                         </div>
                     </div>
                 </div>
 
-                <div id="file-list" class="file-list hidden">
-                    <div class="file-list-header">
-                        <h3 data-i18n="send.fileList">文件列表</h3>
-                        <div class="file-list-actions">
-                            <button id="add-more-btn" class="secondary" data-i18n="send.addMore">添加更多</button>
-                            <button id="clear-all-btn" class="secondary" data-i18n="send.clearAll">清空</button>
+                <div id="share-card" class="share-card hidden">
+                    <div class="share-card-row">
+                        <div>
+                            <p class="share-label" data-i18n="session.codeLabel">房间码</p>
+                            <p id="share-code" class="share-value"></p>
+                        </div>
+                        <div>
+                            <p class="share-label" data-i18n="session.linkLabel">分享链接</p>
+                            <p id="share-link" class="share-link"></p>
                         </div>
                     </div>
-                    <div id="file-items" class="file-items"></div>
-                    <div class="file-list-summary">
-                        <span data-i18n="send.totalFiles">共</span> <span id="total-files">0</span> <span data-i18n="send.filesCount">个文件</span>
-                        <span class="separator">·</span>
-                        <span data-i18n="send.totalSize">总大小</span>: <span id="total-size">0 B</span>
+                    <button id="copy-link-btn" class="secondary" data-i18n="session.copyLink">复制链接</button>
+                </div>
+
+                <div id="network-warning" class="network-warning hidden">
+                    <strong data-i18n="session.connectionTipsTitle">连接提示</strong>
+                    <p data-i18n="session.connectionTips">纯 P2P 模式下，如果 15 到 30 秒仍无法连通，请双方改用手机热点、家庭宽带或其他网络后重试。</p>
+                    <button id="retry-connection-btn" class="retry-btn hidden" data-i18n="session.clickToRetry">点击重试</button>
+                </div>
+
+                <div id="message-list" class="message-list">
+                    <div id="empty-state" class="empty-state" data-i18n="session.emptyState">会话建立后，聊天消息和文件都会出现在这里。</div>
+                </div>
+
+                <div class="composer">
+                    <div class="composer-tools">
+                        <button id="attach-btn" class="secondary" data-i18n="session.attachButton">发送文件</button>
+                        <span class="composer-hint" data-i18n="session.attachHint">文件和消息都走同一条加密 P2P 通道。</span>
+                    </div>
+
+                    <div class="composer-row">
+                        <textarea id="chat-input" rows="2" data-i18n-placeholder="session.sendPlaceholder"
+                            placeholder="输入消息，按 Enter 发送，Shift + Enter 换行"></textarea>
+                        <button id="send-chat-btn" data-i18n="session.sendButton">发送</button>
                     </div>
                 </div>
 
-                <div id="room-code" class="room-code hidden">
-                    <h3 data-i18n="send.shareLink">分享链接</h3>
-                    <div class="code-display">
-                        <span id="code-text"></span>
-                        <button id="copy-btn" data-i18n="send.copyLink">复制链接</button>
-                    </div>
-                    <p class="hint" data-i18n="send.linkHint">将链接发送给接收方，打开即可自动接收</p>
-                </div>
-
-                <div id="connection-status" class="status hidden">
-                    <p><span data-i18n="send.connectionStatus">连接状态</span>: <span id="status-text"
-                            data-i18n="send.waiting">等待接收方...</span></p>
-                </div>
-
-                <div id="progress" class="progress hidden">
-                    <div class="progress-bar">
-                        <div id="progress-fill" class="progress-fill"></div>
-                    </div>
-                    <p><span id="progress-text">0%</span></p>
-                </div>
-            </div>
-
-            <!-- 接收模式 -->
-            <div id="receive-panel" class="panel">
-                <div class="online-notice">
-                    <p data-i18n="receive.notice">提示：收到链接后请立即打开，发送方需保持在线。</p>
-                </div>
-
-                <div class="code-input">
-                    <label for="code-input" data-i18n="receive.enterCode">输入取件码</label>
-                    <div class="code-input-boxes">
-                        <input type="text" class="code-box" maxlength="1" data-index="0">
-                        <input type="text" class="code-box" maxlength="1" data-index="1">
-                        <input type="text" class="code-box" maxlength="1" data-index="2">
-                        <input type="text" class="code-box" maxlength="1" data-index="3">
-                        <span class="code-separator">-</span>
-                        <input type="text" class="code-box" maxlength="1" data-index="4">
-                        <input type="text" class="code-box" maxlength="1" data-index="5">
-                        <input type="text" class="code-box" maxlength="1" data-index="6">
-                        <input type="text" class="code-box" maxlength="1" data-index="7">
-                    </div>
-                    <button id="join-btn" data-i18n="receive.joinRoom">加入房间</button>
-                </div>
-
-                <div id="receive-status" class="status hidden">
-                    <p><span data-i18n="send.connectionStatus">连接状态</span>: <span id="receive-status-text"
-                            data-i18n="send.connecting">连接中...</span></p>
-                </div>
-
-                <div id="receive-info" class="file-info hidden">
-                    <p><span data-i18n="receive.fileName">文件名</span>: <span id="receive-file-name"></span></p>
-                    <p><span data-i18n="send.fileSize">大小</span>: <span id="receive-file-size"></span></p>
-                </div>
-
-                <div id="receive-progress" class="progress hidden">
-                    <div class="progress-bar">
-                        <div id="receive-progress-fill" class="progress-fill"></div>
-                    </div>
-                    <p><span id="receive-progress-text">0%</span></p>
-                </div>
-            </div>
+                <input type="file" id="file-input" hidden multiple>
+            </section>
         </main>
 
         <footer>
@@ -164,18 +148,13 @@
         </footer>
     </div>
 
-    <!-- 二维码贴纸 -->
-    <div id="qrcode" class="qrcode-sticker hidden"></div>
-
-    <!-- 隐私政策弹窗 -->
     <div id="privacy-modal" class="modal">
         <div class="modal-content">
             <span class="close">&times;</span>
             <h2 data-i18n="privacy.title">隐私政策</h2>
             <div class="modal-body">
                 <h3 data-i18n="privacy.dataProcessing">数据处理</h3>
-                <p data-i18n="privacy.dataProcessingText">0trace 使用 WebRTC
-                    点对点技术进行文件传输。所有文件直接在您的设备和接收方设备之间传输，不经过我们的服务器。我们的服务器仅用于建立连接（信令），不存储、不查看、不记录任何文件内容。</p>
+                <p data-i18n="privacy.dataProcessingText">0trace 使用 WebRTC 点对点技术进行文件传输。所有文件直接在您的设备和接收方设备之间传输，不经过我们的服务器。我们的服务器仅用于建立连接（信令），不存储、不查看、不记录任何文件内容。</p>
 
                 <h3 data-i18n="privacy.noTracking">无追踪</h3>
                 <p data-i18n="privacy.noTrackingText">我们不使用任何分析工具、Cookie 或追踪技术。我们不收集您的个人信息、IP 地址或使用数据。</p>
@@ -186,7 +165,6 @@
         </div>
     </div>
 
-    <!-- 使用条款弹窗 -->
     <div id="terms-modal" class="modal">
         <div class="modal-content">
             <span class="close">&times;</span>
@@ -205,8 +183,7 @@
                 <p data-i18n="terms.disclaimerText">本服务按"原样"提供，不提供任何明示或暗示的保证。我们不对服务的可用性、可靠性或适用性做任何保证。</p>
 
                 <h3 data-i18n="terms.liability">责任限制</h3>
-                <p data-i18n="terms.liabilityText">
-                    本项目是开源免费工具，仅提供技术服务。用户对其传输的内容承担全部责任。我们不对因使用本服务而产生的任何直接、间接、偶然、特殊或后果性损害承担责任。</p>
+                <p data-i18n="terms.liabilityText">本项目是开源免费工具，仅提供技术服务。用户对其传输的内容承担全部责任。我们不对因使用本服务而产生的任何直接、间接、偶然、特殊或后果性损害承担责任。</p>
 
                 <h3 data-i18n="terms.opensource">开源项目</h3>
                 <p data-i18n="terms.opensourceText">本项目在 MIT 许可证下开源。源代码可在 GitHub 上获取。我们欢迎贡献和反馈。</p>
@@ -214,7 +191,6 @@
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
     <script src="/static/i18n.js"></script>
     <script type="module" src="/static/app.js"></script>
 </body>

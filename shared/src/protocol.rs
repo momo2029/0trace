@@ -27,20 +27,26 @@ pub enum SignalMessage {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(tag = "type", rename_all = "kebab-case")]
 pub enum TransferMessage {
+    /// 聊天消息
+    Chat {
+        text: String,
+        ts: u64,
+    },
     /// 文件元信息
     FileMeta {
+        id: String,
         name: String,
         size: u64,
         mime_type: String,
     },
     /// 文件块信息
-    ChunkInfo { index: u32, total: u32 },
+    ChunkInfo { id: String, index: u32, total: u32 },
     /// 确认收到块
-    ChunkAck { index: u32 },
+    ChunkAck { id: String, index: u32 },
     /// 传输完成
-    Complete,
+    Complete { id: String },
     /// 取消传输
-    Cancel,
+    Cancel { id: String },
 }
 
 /// 房间角色

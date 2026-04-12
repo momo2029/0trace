@@ -143,8 +143,17 @@ impl RoomManager {
     }
 
     pub async fn create_room(&self) -> String {
-        let code = shared::generate_room_code();
         let mut rooms = self.rooms.write().await;
+        // 碰撞重试，最多 10 次
+        for _ in 0..10 {
+            let code = shared::generate_room_code();
+            if !rooms.contains_key(&code) {
+                rooms.insert(code.clone(), Room::new(code.clone()));
+                return code;
+            }
+        }
+        // 兜底：极端情况下仍然插入（覆盖旧房间）
+        let code = shared::generate_room_code();
         rooms.insert(code.clone(), Room::new(code.clone()));
         code
     }
