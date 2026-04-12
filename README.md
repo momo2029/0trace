@@ -11,7 +11,7 @@
 ## ✨ Features
 
 - 🔒 **Zero Trace** - Files transferred via WebRTC P2P, server stores nothing
-- 🚀 **Ultra Lightweight** - Rust backend < 5MB, pure JavaScript frontend, no frameworks
+- 🚀 **Ultra Lightweight** - Rust backend < 2MB, pure JavaScript frontend, no frameworks
 - 📦 **Ready to Use** - Open in browser, no registration or installation needed
 - 🌐 **Cross-Network** - NAT traversal supported, not limited to LAN
 - 🌍 **Multilingual** - Chinese, English, Japanese, Korean, Spanish, French

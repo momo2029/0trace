@@ -11,7 +11,7 @@
 ## ✨ Características
 
 - 🔒 **Cero Privacidad** - Archivos transferidos vía WebRTC P2P, el servidor no almacena datos
-- 🚀 **Ultra Liviano** - Backend Rust < 5MB, frontend JavaScript puro, sin frameworks
+- 🚀 **Ultra Liviano** - Backend Rust < 2MB, frontend JavaScript puro, sin frameworks
 - 📦 **Listo para Usar** - Abrir en navegador, no requiere registro o instalación
 - 🌐 **Transferencia Cruzada** - Soporta NAT traversal, no limitado a LAN
 - 🌍 **Multilingüe** - Chino, inglés, japonés, coreano, español, francés

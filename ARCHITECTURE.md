@@ -404,7 +404,7 @@ pub async fn leave_room(&self, code: &str, role: Role) {
 
 | Metric | Value |
 |--------|-------|
-| Backend binary size | < 5MB (release) |
+| Backend binary size | < 2MB (release) |
 | Frontend asset size | < 100KB (including icons) |
 | Memory usage | < 10MB (idle) |
 | Startup time | < 10ms |

@@ -2,7 +2,8 @@
   "permissions": {
     "allow": [
       "WebSearch",
-      "Bash(npm uninstall *)"
+      "Bash(npm uninstall *)",
+      "Bash(docker images)"
     ]
   },
   "$version": 3

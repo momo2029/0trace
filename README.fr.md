@@ -11,7 +11,7 @@
 ## ✨ Fonctionnalités
 
 - 🔒 **Zéro Vie Privée** - Fichiers transférés via WebRTC P2P, le serveur ne stocke aucune donnée
-- 🚀 **Ultra Léger** - Backend Rust < 5MB, frontend JavaScript pur, aucun framework
+- 🚀 **Ultra Léger** - Backend Rust < 2MB, frontend JavaScript pur, aucun framework
 - 📦 **Prêt à l'Emploi** - Ouvrir dans le navigateur, aucune inscription ou installation nécessaire
 - 🌐 **Transversalité Réseau** - Supporte NAT traversal, non limité au LAN
 - 🌍 **Multilingue** - Chinois, anglais, japonais, coréen, espagnol, français
