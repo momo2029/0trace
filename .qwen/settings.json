@@ -3,7 +3,8 @@
     "allow": [
       "WebSearch",
       "Bash(npm uninstall *)",
-      "Bash(docker images)"
+      "Bash(docker images)",
+      "Bash(playwright *)"
     ]
   },
   "$version": 3

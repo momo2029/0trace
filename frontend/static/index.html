@@ -100,27 +100,31 @@
                     <button id="copy-link-btn" class="secondary" data-i18n="session.copyLink">复制链接</button>
                 </div>
 
-                <div id="network-warning" class="network-warning hidden">
-                    <strong data-i18n="session.connectionTipsTitle">连接提示</strong>
-                    <p data-i18n="session.connectionTips">纯 P2P 模式下，如果 15 到 30 秒仍无法连通，请双方改用手机热点、家庭宽带或其他网络后重试。</p>
-                    <p id="room-expiry-note" class="room-expiry-note hidden" data-i18n="session.roomExpiryHint">如果双方都离开，或房间持续空置，房间会在约 5 分钟后自动失效。请保留房间码或分享链接。</p>
-                    <button id="retry-connection-btn" class="retry-btn hidden" data-i18n="session.clickToRetry">点击重试</button>
-                </div>
+                <div class="conversation-shell">
+                    <div class="conversation-stage">
+                        <div id="network-warning" class="network-warning hidden">
+                            <strong data-i18n="session.connectionTipsTitle">连接提示</strong>
+                            <p data-i18n="session.connectionTips">纯 P2P 模式下，如果 15 到 30 秒仍无法连通，请双方改用手机热点、家庭宽带或其他网络后重试。</p>
+                            <p id="room-expiry-note" class="room-expiry-note hidden" data-i18n="session.roomExpiryHint">如果双方都离开，或房间持续空置，房间会在约 5 分钟后自动失效。请保留房间码或分享链接。</p>
+                            <button id="retry-connection-btn" class="retry-btn hidden" data-i18n="session.clickToRetry">点击重试</button>
+                        </div>
 
-                <div id="message-list" class="message-list">
-                    <div id="empty-state" class="empty-state" data-i18n="session.emptyState">会话建立后，聊天消息和文件都会出现在这里。</div>
-                </div>
-
-                <div class="composer">
-                    <div class="composer-tools">
-                        <button id="attach-btn" class="secondary" data-i18n="session.attachButton">发送文件</button>
-                        <span class="composer-hint" data-i18n="session.attachHint">文件和消息都走同一条加密 P2P 通道。</span>
+                        <div id="message-list" class="message-list">
+                            <div id="empty-state" class="empty-state" data-i18n="session.emptyState">会话建立后，聊天消息和文件都会出现在这里。</div>
+                        </div>
                     </div>
 
-                    <div class="composer-row">
-                        <textarea id="chat-input" rows="2" data-i18n-placeholder="session.sendPlaceholder"
-                            placeholder="输入消息，按 Enter 发送，Shift + Enter 换行"></textarea>
-                        <button id="send-chat-btn" data-i18n="session.sendButton">发送</button>
+                    <div class="composer">
+                        <div class="composer-tools">
+                            <button id="attach-btn" class="secondary" data-i18n="session.attachButton">发送文件</button>
+                            <span class="composer-hint" data-i18n="session.attachHint">文件和消息都走同一条加密 P2P 通道。</span>
+                        </div>
+
+                        <div class="composer-row">
+                            <textarea id="chat-input" rows="2" data-i18n-placeholder="session.sendPlaceholder"
+                                placeholder="输入消息，按 Enter 发送，Shift + Enter 换行"></textarea>
+                            <button id="send-chat-btn" data-i18n="session.sendButton">发送</button>
+                        </div>
                     </div>
                 </div>
 

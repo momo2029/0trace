@@ -1554,10 +1554,26 @@ class App {
         this.scrollMessagesToBottom();
     }
 
-    appendChatMessage({ text, ts, outgoing }) {
-        this.hideEmptyState();
+    createTimelineItem(outgoing) {
         const item = document.createElement('div');
         item.className = `timeline-item ${outgoing ? 'outgoing' : 'incoming'}`;
+
+        const avatar = document.createElement('div');
+        avatar.className = `message-avatar ${outgoing ? 'outgoing' : 'incoming'}`;
+        avatar.setAttribute('aria-hidden', 'true');
+
+        const stack = document.createElement('div');
+        stack.className = 'message-stack';
+
+        item.appendChild(avatar);
+        item.appendChild(stack);
+
+        return { item, stack };
+    }
+
+    appendChatMessage({ text, ts, outgoing }) {
+        this.hideEmptyState();
+        const { item, stack } = this.createTimelineItem(outgoing);
 
         const bubble = document.createElement('div');
         bubble.className = `bubble chat-bubble ${outgoing ? 'outgoing' : 'incoming'}`;
@@ -1572,7 +1588,7 @@ class App {
 
         bubble.appendChild(content);
         bubble.appendChild(meta);
-        item.appendChild(bubble);
+        stack.appendChild(bubble);
         this.elements.messageList.appendChild(item);
         this.scrollMessagesToBottom();
     }
@@ -1580,8 +1596,7 @@ class App {
     addFileMessage({ id, name, size, outgoing, statusText, progress }) {
         this.hideEmptyState();
 
-        const item = document.createElement('div');
-        item.className = `timeline-item ${outgoing ? 'outgoing' : 'incoming'}`;
+        const { item, stack } = this.createTimelineItem(outgoing);
 
         const bubble = document.createElement('div');
         bubble.className = `bubble file-bubble ${outgoing ? 'outgoing' : 'incoming'}`;
@@ -1620,7 +1635,7 @@ class App {
         bubble.appendChild(detail);
         bubble.appendChild(progressBar);
         bubble.appendChild(status);
-        item.appendChild(bubble);
+        stack.appendChild(bubble);
         this.elements.messageList.appendChild(item);
 
         this.transferNodes.set(id, {
