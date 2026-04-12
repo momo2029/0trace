@@ -1246,6 +1246,10 @@ main {
     flex: 1;
 }
 
+.room-expiry-note {
+    color: rgba(15, 23, 42, 0.76);
+}
+
 .retry-btn {
     background: var(--warning);
     color: white;

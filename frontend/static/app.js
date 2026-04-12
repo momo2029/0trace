@@ -12,6 +12,9 @@ class WebRTCConnection {
         this.reconnectAttempts = 0;
         this.isIntentionalClose = false;
         this.isFatalError = false;
+        this.isCreatingOffer = false;
+        this.offerRetryTimeout = null;
+        this.offerRetryAttempts = 0;
 
         this.speedStats = {
             lastTime: 0,
@@ -54,6 +57,11 @@ class WebRTCConnection {
         await this.connect('receiver');
     }
 
+    async attachToRoom(code, role) {
+        this.code = code;
+        await this.connect(role);
+    }
+
     async connect(role) {
         this.role = role;
         this.updateStatus('connecting');
@@ -66,6 +74,11 @@ class WebRTCConnection {
                     this.setupPeerConnection();
                 }
                 this.startHeartbeat();
+                if (this.role === 'sender') {
+                    this.maybeCreateOfferForWaitingPeer().catch((error) => {
+                        console.warn('Deferred offer creation failed:', error);
+                    });
+                }
                 resolve();
             };
 
@@ -112,6 +125,12 @@ class WebRTCConnection {
             if (!this.isTransportReady() && this.role === 'sender') {
                 this.resetPeerConnection();
                 this.setupPeerConnection();
+            }
+
+            if (this.role === 'sender') {
+                this.maybeCreateOfferForWaitingPeer().catch((error) => {
+                    console.warn('Deferred reconnect offer failed:', error);
+                });
             }
         };
 
@@ -219,9 +238,90 @@ class WebRTCConnection {
     }
 
     async createOffer() {
-        const offer = await this.pc.createOffer();
-        await this.pc.setLocalDescription(offer);
-        this.sendSignal({ type: 'offer', sdp: offer.sdp });
+        const pc = this.pc;
+        if (!pc || pc.connectionState === 'closed' || pc.signalingState !== 'stable' || this.isCreatingOffer) {
+            return;
+        }
+
+        this.isCreatingOffer = true;
+        try {
+            const offer = await pc.createOffer();
+            if (
+                this.pc !== pc ||
+                pc.connectionState === 'closed' ||
+                pc.signalingState === 'closed' ||
+                pc.signalingState !== 'stable' ||
+                !this.ws ||
+                this.ws.readyState !== WebSocket.OPEN
+            ) {
+                return;
+            }
+
+            await pc.setLocalDescription(offer);
+            if (this.pc !== pc || !this.ws || this.ws.readyState !== WebSocket.OPEN) {
+                return;
+            }
+
+            this.sendSignal({ type: 'offer', sdp: offer.sdp });
+        } finally {
+            if (this.pc === pc) {
+                this.isCreatingOffer = false;
+            }
+        }
+    }
+
+    canCreateOfferNow() {
+        return Boolean(
+            this.pc &&
+            this.pc.connectionState !== 'closed' &&
+            this.pc.signalingState === 'stable' &&
+            !this.isCreatingOffer
+        );
+    }
+
+    scheduleOfferRetry(delay = 1000) {
+        if (this.offerRetryTimeout || this.role !== 'sender' || this.isIntentionalClose || this.isFatalError) {
+            return;
+        }
+
+        if (this.offerRetryAttempts >= 5) {
+            return;
+        }
+
+        this.offerRetryAttempts += 1;
+        const nextDelay = Math.min(delay * Math.pow(2, this.offerRetryAttempts - 1), 10000);
+
+        this.offerRetryTimeout = setTimeout(() => {
+            this.offerRetryTimeout = null;
+            this.maybeCreateOfferForWaitingPeer().catch((error) => {
+                console.warn('Scheduled offer retry failed:', error);
+            });
+        }, nextDelay);
+    }
+
+    async maybeCreateOfferForWaitingPeer() {
+        if (this.role !== 'sender' || !this.code || !this.ws || this.ws.readyState !== WebSocket.OPEN) {
+            return;
+        }
+
+        try {
+            const response = await fetch(`/api/room-info?code=${encodeURIComponent(this.code)}`);
+            if (!response.ok) {
+                throw new Error(`Room info request failed with ${response.status}`);
+            }
+            const data = await response.json();
+            if (data.success && data.status && data.status.has_receiver) {
+                if (!this.canCreateOfferNow()) {
+                    this.scheduleOfferRetry(500);
+                    return;
+                }
+                this.offerRetryAttempts = 0;
+                await this.createOffer();
+            }
+        } catch (error) {
+            console.warn('Failed to query room status:', error);
+            this.scheduleOfferRetry(1500);
+        }
     }
 
     async handleSignalMessage(message) {
@@ -342,7 +442,13 @@ class WebRTCConnection {
         // 清理传输相关状态
         this.dc = null;
         this.pc = null;
+        this.isCreatingOffer = false;
         this.pendingCandidates = [];
+        this.offerRetryAttempts = 0;
+        if (this.offerRetryTimeout) {
+            clearTimeout(this.offerRetryTimeout);
+            this.offerRetryTimeout = null;
+        }
 
         // 清理未完成的传输
         this.cleanupPendingTransfers();
@@ -803,6 +909,7 @@ class App {
         this.connection = null;
         this.role = null;
         this.currentCode = '';
+        this.sessionStorageKey = '0trace:session';
         this.sendQueue = [];
         this.isSending = false;
         this.fileSequence = 0;
@@ -840,6 +947,7 @@ class App {
             sessionStatusBadge: document.getElementById('session-status-badge'),
             connectionQuality: document.getElementById('connection-quality'),
             networkWarning: document.getElementById('network-warning'),
+            roomExpiryNote: document.getElementById('room-expiry-note'),
             messageList: document.getElementById('message-list'),
             emptyState: document.getElementById('empty-state'),
             chatInput: document.getElementById('chat-input'),
@@ -913,7 +1021,12 @@ class App {
 
         // 重试连接按钮
         this.elements.retryConnectionBtn = document.getElementById('retry-connection-btn');
-        this.elements.retryConnectionBtn.addEventListener('click', () => this.retryConnection());
+        this.elements.retryConnectionBtn.addEventListener('click', () => {
+            this.retryConnection().catch((error) => {
+                console.error('Retry connection error:', error);
+                this.showToast(i18n.t('session.joinFailed'), 'error');
+            });
+        });
 
         this.elements.logoLink.addEventListener('click', (event) => {
             if (window.location.search || this.connection) {
@@ -1007,21 +1120,30 @@ class App {
         }
 
         this.fillCodeBoxes(code);
-        this.joinSession(code);
+        this.openExistingSession(code, this.resolveStoredRole(code));
     }
 
-    retryConnection() {
-        if (this.connection) {
-            this.connection.close();
+    async retryConnection() {
+        if (this.currentCode && this.role) {
+            this.connection?.close();
             this.elements.retryConnectionBtn.classList.add('hidden');
-
-            // 重新开始连接流程
             if (this.role === 'sender') {
+                const roomStatus = await this.fetchRoomStatus(this.currentCode);
+                if (roomStatus && roomStatus.success) {
+                    this.openExistingSession(this.currentCode, this.role);
+                    return;
+                }
+
                 this.createSession();
-            } else if (this.currentCode) {
-                this.joinSession(this.currentCode);
+                return;
             }
+
+            this.openExistingSession(this.currentCode, this.role);
+            return;
         }
+
+        this.resetApp();
+        this.showToast(i18n.t('session.startFirst'), 'error');
     }
 
     async createSession() {
@@ -1035,6 +1157,8 @@ class App {
         try {
             const code = await this.connection.createRoom();
             this.currentCode = code;
+            this.persistSession();
+            this.syncRoomUrl(code);
             this.updateShareInfo();
             this.elements.shareCard.classList.remove('hidden');
             this.updateStatusBadge('waiting');
@@ -1050,6 +1174,8 @@ class App {
         this.resetSessionState();
         this.role = 'receiver';
         this.currentCode = code;
+        this.persistSession();
+        this.syncRoomUrl(code);
         this.showSessionPanel();
         this.createConnection();
         this.updateRoleLabel();
@@ -1063,6 +1189,37 @@ class App {
             console.error('Join session error:', error);
             this.showToast(i18n.t('session.joinFailed'), 'error');
             this.appendSystemMessage(i18n.t('session.joinFailed'));
+        }
+    }
+
+    async openExistingSession(code, role) {
+        if (!this.isValidRoomCode(code)) {
+            this.resetApp();
+            this.showToast(i18n.t('session.invalidCode'), 'error');
+            return;
+        }
+
+        this.resetSessionState();
+        this.role = role;
+        this.currentCode = code;
+        this.persistSession();
+        this.syncRoomUrl(code);
+        this.showSessionPanel();
+        this.createConnection();
+        this.updateRoleLabel();
+        this.updateShareInfo();
+        if (role === 'sender') {
+            this.elements.shareCard.classList.remove('hidden');
+        }
+        this.appendSystemMessage(i18n.t('session.restoringSystem'));
+
+        try {
+            await this.connection.attachToRoom(code, role);
+            this.appendSystemMessage(i18n.t('session.restoredSystem'));
+        } catch (error) {
+            console.error('Restore session error:', error);
+            this.resetApp();
+            this.showToast(i18n.t('session.joinFailed'), 'error');
         }
     }
 
@@ -1100,6 +1257,8 @@ class App {
 
     resetApp() {
         this.resetSessionState();
+        this.clearPersistedSession();
+        this.syncRoomUrl('');
         this.fillCodeBoxes('');
         this.elements.setupShell.classList.remove('hidden');
         this.elements.sessionPanel.classList.add('hidden');
@@ -1140,6 +1299,7 @@ class App {
         }
 
         this.updateStatusBadge(status);
+        this.updateRoomExpiryHint(status);
 
         if (status === 'connected') {
             this.elements.networkWarning.classList.add('hidden');
@@ -1178,6 +1338,15 @@ class App {
             }
             this.lastAnnouncedStatus = status;
         }
+    }
+
+    updateRoomExpiryHint(status) {
+        if (!this.elements.roomExpiryNote) {
+            return;
+        }
+
+        const shouldShow = status === 'peer-left' || status === 'disconnected' || status === 'failed';
+        this.elements.roomExpiryNote.classList.toggle('hidden', !shouldShow);
     }
 
     updateConnectionQuality(quality, metrics) {
@@ -1509,6 +1678,76 @@ class App {
 
     getShareUrl(code) {
         return `${window.location.origin}/?code=${code}`;
+    }
+
+    async fetchRoomStatus(code) {
+        if (!this.isValidRoomCode(code)) {
+            return null;
+        }
+
+        try {
+            const response = await fetch(`/api/room-info?code=${encodeURIComponent(code)}`);
+            if (!response.ok) {
+                return null;
+            }
+            return await response.json();
+        } catch (error) {
+            console.warn('Failed to fetch room status:', error);
+            return null;
+        }
+    }
+
+    persistSession() {
+        if (!this.currentCode || !this.role) {
+            return;
+        }
+
+        sessionStorage.setItem(this.sessionStorageKey, JSON.stringify({
+            code: this.currentCode,
+            role: this.role,
+        }));
+    }
+
+    clearPersistedSession() {
+        sessionStorage.removeItem(this.sessionStorageKey);
+    }
+
+    resolveStoredRole(code) {
+        try {
+            const raw = sessionStorage.getItem(this.sessionStorageKey);
+            if (!raw) {
+                return 'receiver';
+            }
+
+            const saved = JSON.parse(raw);
+            if (
+                saved.code === code &&
+                this.isValidRoomCode(saved.code) &&
+                (saved.role === 'sender' || saved.role === 'receiver')
+            ) {
+                return saved.role;
+            }
+        } catch (error) {
+            console.warn('Failed to restore saved session state:', error);
+        }
+
+        return 'receiver';
+    }
+
+    syncRoomUrl(code) {
+        const url = new URL(window.location.href);
+        if (code) {
+            url.searchParams.set('code', code);
+        } else {
+            url.searchParams.delete('code');
+        }
+        const search = url.searchParams.toString();
+        const nextUrl = `${url.pathname}${search ? `?${search}` : ''}${url.hash}`;
+        window.history.replaceState({}, '', nextUrl);
+    }
+
+    isValidRoomCode(code) {
+        return /^[A-Z0-9]{6}$/i.test(code || '');
     }
 
     formatCode(code) {
