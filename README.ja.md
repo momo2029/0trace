@@ -1,6 +1,6 @@
 # 0trace
 
-> ゼロプライバシー P2P ファイル転送ツール - WebRTC ベースのピアツーピアファイル共有
+> 2人向けの純粋なP2Pブラウザーチャットとファイル転送
 
 [![Demo](https://img.shields.io/badge/demo-0trace.org-blue)](https://0trace.org)
 [![GitHub](https://img.shields.io/badge/github-momo2029/0trace-green)](https://github.com/momo2029/0trace)
@@ -8,120 +8,113 @@
 
 [English](README.md) | [한국어](README.ko.md) | [Español](README.es.md) | [Français](README.fr.md)
 
-## ✨ 特徴
+## Features
 
-- 🔒 **ゼロプライバシー** - WebRTC P2P 直接転送、サーバーはデータを保存しない
-- 🚀 **超軽量** - Rust バックエンド < 2MB、フロントエンドは Pure JavaScript、フレームワーク不要
-- 📦 **即利用可能** - ブラウザで開くだけ、登録・インストール不要
-- 🌐 **クロスネットワーク** - NAT トラバーサル対応、LAN に限定されない
-- 🌍 **多言語対応** - 中国語、英語、日本語、韓国語、スペイン語、フランス語
-- ⚡ **リアルタイム進捗** - 256KB チャンク転送、リアルタイム進捗表示
+- サーバー中継なしの純粋な WebRTC P2P 転送
+- チャットとファイル転送を1つのセッションに統合
+- アカウント登録不要、インストール不要、ブラウザですぐ使える
+- ルームコードまたは共有リンクで参加できる2人用フロー
+- `BOOK23` のような覚えやすい6文字ルームコード
+- URL に `?code=ROOMCODE` を保持するので、リロード後も同じ部屋を復元しやすい
+- モダンブラウザで大容量ファイルのストリーミング転送に対応
+- 中国語、英語、日本語、韓国語、スペイン語、フランス語のUIを提供
 
-## 🚀 クイックスタート
+## Quick Start
 
-### オンライン利用
+### Online
 
-[0trace.org](https://0trace.org) にアクセスしてすぐにファイル転送を開始
+[0trace.org](https://0trace.org) にアクセスしてください。
 
-### ローカルデプロイ
+### Local Deployment
 
-**方法1: Docker（推奨）**
+**Method 1: Docker**
 
 ```bash
 docker run -d -p 2029:2029 ghcr.io/momo2029/0trace:latest
 ```
 
-http://localhost:2029 にアクセス
+その後 `http://localhost:2029` を開きます。
 
-**方法2: ソースからビルド**
+**Method 2: Build from Source**
 
 ```bash
-# リポジトリをクローン
 git clone https://github.com/momo2029/0trace
 cd 0trace
-
-# 実行（Rust 1.75+ が必要）
-make dev
+./dev.sh
 ```
 
-## 📖 使い方
+## How It Works
 
-### ファイルを送信
+1. 一方がルームを作成します。
+2. 0trace が6文字のルームコードと共有リンクを生成します。
+3. もう一方がリンクを開くか、ルームコードを入力して参加します。
+4. 2つのブラウザが WebRTC の直接接続を確立します。
+5. チャットメッセージとファイルが同じ会話タイムラインに表示されます。
 
-1. [0trace.org](https://0trace.org) を開く
-2. 「ファイルを送信」タブを選択
-3. ファイル/フォルダをクリックまたはドラッグ&ドロップ
-4. 「リンクをコピー」をクリック
-5. リンクを受信者に共有（WeChat/QQ/メールなど）
+ページを更新しても、URL の `?code=` によって同じブラウザから部屋の復元を試せます。両者が退出して部屋が空のままだと、約5分で自動失効します。
 
-### ファイルを受信
+## Product Positioning
 
-**方法1: リンクをクリック（推奨）**
-- 受信者が共有リンクをクリック
-- 自動で受信開始、手動操作不要
+0trace は意図的に厳格な設計です。
 
-**方法2: 手動入力**
-- 「ファイルを受信」タブを選択
-- 6桁のピックアップコードを入力
-- 「部屋に参加」をクリック
+- 1ルームは2人まで
+- ファイルデータ用の TURN リレーは使わない
+- サーバー側の転送フォールバックは用意しない
+- 直接接続できない場合は、双方がネットワークを切り替えて再試行する
 
-## 🏗️ アーキテクチャ
+この設計により、仕組みを単純に保ち、ファイル内容をサーバーに残しません。その代わり、ネットワークの組み合わせによっては接続できないことがあります。
 
+## Architecture
+
+```text
+ブラウザA <- WebSocketシグナリング -> Rustバックエンド <- WebSocketシグナリング -> ブラウザB
+    |                                                                           |
+    +---------------- WebRTC P2P データチャネル（チャット + ファイル） ---------+
 ```
-送信者 ←── WebSocket シグナリング ──→ Rust バックエンド ←── WebSocket シグナリング ──→ 受信者
-   │                                                                             │
-   └─────────────────────── WebRTC P2P 直接転送（ファイルデータ） ──────────────┘
-```
 
-**技術スタック：**
-- バックエンド: Rust + Axum + Tokio + WebSocket
-- フロントエンド: Vanilla JavaScript + WebRTC API
-- プロトコル: WebRTC DataChannel + カスタム転送プロトコル
+**Tech Stack**
 
-詳細は [ARCHITECTURE.md](ARCHITECTURE.md) を参照
+- Backend: Rust + Axum + Tokio + WebSocket
+- Frontend: Vanilla JavaScript + WebRTC API + File System Access API
+- Protocol: WebRTC DataChannel + custom message protocol
 
-## 🔒 セキュリティ
+詳細は [ARCHITECTURE.md](ARCHITECTURE.md) を参照してください。
 
-- ✅ WebRTC は DTLS/SRTP 暗号を内蔵
-- ✅ サーバーはゼロデータ保存（シグナリングのみ）
-- ✅ ピックアップコード空間 34^6 ≈ 15億通り
-- ✅ 部屋は1時間で自動期限切れ
+## Security And Privacy
 
-## ⚠️ 制限事項
+- ファイル内容は2つのブラウザ間で直接転送される
+- サーバーはシグナリングとルーム管理のみに使用される
+- WebRTC は DTLS/SRTP で暗号化される
+- ルームコードまたは共有リンクを知っている人は参加できるため、機密情報として扱う必要がある
+- 空のルームは約5分で自動失効する
 
-- 部屋あたり最大2人（1送信 + 1受信）
-- ファイルサイズはブラウザメモリに制限される
-- 対称 NAT には TURN サーバーが必要（デフォルトでは未設定）
+## Limitations
 
-## 🛠️ 開発
+- 参加者は2人に限定
+- 純粋なP2Pのため、一部の NAT や企業ネットワークでは接続に失敗する
+- 直接接続に失敗した場合は、ネットワークを切り替えて再試行する必要がある
+- 大容量ファイルのストリーミングはモダンブラウザ依存
 
-[CONTRIBUTING.md](CONTRIBUTING.md) を参照
+## Development
 
 ```bash
-# 開発モード（ホットリロード）
 ./dev.sh
-
-# テスト実行
 make test
-
-# プロダクションビルド
 make build
 ```
 
-## 📝 ライセンス
+[CONTRIBUTING.md](CONTRIBUTING.md) を参照してください。
+
+## License
 
 [MIT License](LICENSE)
 
-## 🙏 謝辞
+## Contributing
 
-## 🤝 コントリビュート
+Issue と Pull Request を歓迎します。
 
-Issue と Pull Request を歓迎します！
+## Links
 
-PR を送信する前に、[コントリビューションガイド](CONTRIBUTING.md) をお読みください
-
-## 📧 連絡先
-
-- プロジェクトホームページ: https://github.com/momo2029/0trace
-- デモサイト: https://0trace.org
-- Issue トラッカー: https://github.com/momo2029/0trace/issues
+- Demo: https://0trace.org
+- GitHub: https://github.com/momo2029/0trace
+- Issues: https://github.com/momo2029/0trace/issues

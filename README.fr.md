@@ -1,6 +1,6 @@
 # 0trace
 
-> Zéro-Vie-Privée Transfert P2P de Fichiers - Partage de fichiers pair-à-pair basé sur WebRTC
+> Chat et transfert de fichiers P2P purs dans le navigateur pour deux personnes
 
 [![Demo](https://img.shields.io/badge/demo-0trace.org-blue)](https://0trace.org)
 [![GitHub](https://img.shields.io/badge/github-momo2029/0trace-green)](https://github.com/momo2029/0trace)
@@ -8,120 +8,113 @@
 
 [English](README.md) | [日本語](README.ja.md) | [한국어](README.ko.md) | [Español](README.es.md)
 
-## ✨ Fonctionnalités
+## Features
 
-- 🔒 **Zéro Vie Privée** - Fichiers transférés via WebRTC P2P, le serveur ne stocke aucune donnée
-- 🚀 **Ultra Léger** - Backend Rust < 2MB, frontend JavaScript pur, aucun framework
-- 📦 **Prêt à l'Emploi** - Ouvrir dans le navigateur, aucune inscription ou installation nécessaire
-- 🌐 **Transversalité Réseau** - Supporte NAT traversal, non limité au LAN
-- 🌍 **Multilingue** - Chinois, anglais, japonais, coréen, espagnol, français
-- ⚡ **Progression en Temps Réel** - Transfert par chunks de 256KB avec progression en direct
+- Transfert WebRTC P2P pur, sans relais de fichiers côté serveur
+- Chat et transfert de fichiers dans une seule session
+- Aucun compte, aucune installation, utilisation directe dans le navigateur
+- Parcours à deux personnes avec code de salle ou lien de partage
+- Codes de salle à 6 caractères faciles à retenir, comme `BOOK23`
+- L’URL contient `?code=ROOMCODE`, ce qui permet de tenter de restaurer la même salle après un rafraîchissement
+- Prise en charge du streaming de gros fichiers dans les navigateurs modernes
+- Interface disponible en chinois, anglais, japonais, coréen, espagnol et français
 
-## 🚀 Démarrage Rapide
+## Quick Start
 
-### Utilisation en Ligne
+### Online
 
-Visitez [0trace.org](https://0trace.org) pour commencer immédiatement le transfert de fichiers
+Rendez-vous sur [0trace.org](https://0trace.org).
 
-### Déploiement Local
+### Local Deployment
 
-**Méthode 1: Docker (Recommandé)**
+**Method 1: Docker**
 
 ```bash
 docker run -d -p 2029:2029 ghcr.io/momo2029/0trace:latest
 ```
 
-Accédez à http://localhost:2029
+Ouvrez ensuite `http://localhost:2029`.
 
-**Méthode 2: Compiler depuis les Sources**
+**Method 2: Build from Source**
 
 ```bash
-# Cloner le dépôt
 git clone https://github.com/momo2029/0trace
 cd 0trace
-
-# Exécuter (nécessite Rust 1.75+)
-make dev
+./dev.sh
 ```
 
-## 📖 Utilisation
+## How It Works
 
-### Envoyer des Fichiers
+1. Une personne crée une salle.
+2. 0trace génère un code de salle à 6 caractères et un lien de partage.
+3. L’autre personne ouvre le lien ou saisit le code pour rejoindre la salle.
+4. Les deux navigateurs établissent une connexion WebRTC directe.
+5. Les messages et les fichiers apparaissent dans la même conversation.
 
-1. Ouvrir [0trace.org](https://0trace.org)
-2. Sélectionner l'onglet "Envoyer des Fichiers"
-3. Cliquer ou glisser-déposer fichiers/dossiers
-4. Cliquer sur "Copier le Lien"
-5. Partager le lien avec le destinataire (WeChat/QQ/Email/etc.)
+Si la page est rechargée, le paramètre `?code=` dans l’URL permet au même navigateur d’essayer de restaurer la salle. Si les deux côtés quittent la session et que la salle reste vide, elle expire automatiquement après environ 5 minutes.
 
-### Recevoir des Fichiers
+## Product Positioning
 
-**Méthode 1: Clic sur Lien (Recommandé)**
-- Le destinataire clique sur le lien partagé
-- Réception automatique, aucune manipulation manuelle nécessaire
+0trace est volontairement strict :
 
-**Méthode 2: Saisie Manuelle**
-- Sélectionner l'onglet "Recevoir des Fichiers"
-- Entrer le code de ramassage à 6 chiffres
-- Clic sur "Rejoindre la Salle"
+- Seulement 2 personnes par salle
+- Aucun relais TURN pour les données de fichiers
+- Aucun fallback de transfert côté serveur
+- Si une connexion directe ne peut pas être établie, les deux parties doivent changer de réseau et réessayer
 
-## 🏗️ Architecture
+Ce choix garde le produit simple et évite que le contenu des fichiers passe par le serveur, mais certaines combinaisons réseau peuvent échouer.
 
+## Architecture
+
+```text
+Navigateur A <- signalisation WebSocket -> backend Rust <- signalisation WebSocket -> Navigateur B
+      |                                                                                |
+      +---------------- canal de données WebRTC P2P (chat + fichiers) -----------------+
 ```
-Expéditeur ←── WebSocket Signalisation ──→ Backend Rust ←── WebSocket Signalisation ──→ Destinataire
-   │                                                                                      │
-   └─────────────────────── Transfert Direct WebRTC P2P (Données de Fichier) ─────────────┘
-```
 
-**Stack Technologique:**
+**Tech Stack**
+
 - Backend: Rust + Axum + Tokio + WebSocket
-- Frontend: Vanilla JavaScript + WebRTC API
-- Protocole: WebRTC DataChannel + Protocole de Transfert Personnalisé
+- Frontend: Vanilla JavaScript + WebRTC API + File System Access API
+- Protocol: WebRTC DataChannel + custom message protocol
 
-Voir [ARCHITECTURE.md](ARCHITECTURE.md) pour plus de détails
+Voir [ARCHITECTURE.md](ARCHITECTURE.md) pour plus de détails.
 
-## 🔒 Sécurité
+## Security And Privacy
 
-- ✅ WebRTC fournit un chiffrement DTLS/SRTP intégré
-- ✅ Zéro rétention de données sur le serveur (signalisation uniquement)
-- ✅ Espace de code de ramassage 34^6 ≈ 1.5 milliard de combinaisons
-- ✅ La salle expire automatiquement après 1 heure
+- Le contenu des fichiers est transféré directement entre les deux navigateurs
+- Le serveur ne sert qu’à la signalisation et à la coordination des salles
+- WebRTC utilise un transport chiffré avec DTLS/SRTP
+- Toute personne disposant du code de salle ou du lien de partage peut rejoindre la session, il faut donc les traiter comme des informations sensibles
+- Les salles vides expirent automatiquement après environ 5 minutes
 
-## ⚠️ Limitations
+## Limitations
 
-- Maximum 2 personnes par salle (1 expéditeur + 1 destinataire)
-- Taille de fichier limitée par la mémoire du navigateur
-- NAT symétrique nécessite un serveur TURN (non configuré par défaut)
+- Conçu pour exactement 2 participants
+- Le mode P2P pur peut échouer sur certaines combinaisons de NAT ou de réseaux d’entreprise
+- Si la connexion directe échoue, les utilisateurs doivent changer de réseau et réessayer
+- Le streaming de gros fichiers dépend du support des navigateurs modernes
 
-## 🛠️ Développement
-
-Voir [CONTRIBUTING.md](CONTRIBUTING.md)
+## Development
 
 ```bash
-# Mode développement (rechargement à chaud)
 ./dev.sh
-
-# Exécuter les tests
 make test
-
-# Construire pour la production
 make build
 ```
 
-## 📝 Licence
+Voir [CONTRIBUTING.md](CONTRIBUTING.md).
+
+## License
 
 [MIT License](LICENSE)
 
-## 🙏 Remerciements
+## Contributing
 
-## 🤝 Contribuer
+Issues et Pull Requests sont les bienvenus.
 
-Les Issues et Pull Requests sont les bienvenues !
+## Links
 
-Veuillez lire le [Guide de Contribution](CONTRIBUTING.md) avant de soumettre des PRs
-
-## 📧 Contact
-
-- Page du Projet: https://github.com/momo2029/0trace
-- Site de Démo: https://0trace.org
-- Traqueur d'Issues: https://github.com/momo2029/0trace/issues
+- Demo: https://0trace.org
+- GitHub: https://github.com/momo2029/0trace
+- Issues: https://github.com/momo2029/0trace/issues

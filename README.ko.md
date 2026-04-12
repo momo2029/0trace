@@ -1,6 +1,6 @@
 # 0trace
 
-> 제로 프라이버시 P2P 파일 전송 도구 - WebRTC 기반 피어투피어 파일 공유
+> 두 사람을 위한 순수 P2P 브라우저 채팅 및 파일 전송
 
 [![Demo](https://img.shields.io/badge/demo-0trace.org-blue)](https://0trace.org)
 [![GitHub](https://img.shields.io/badge/github-momo2029/0trace-green)](https://github.com/momo2029/0trace)
@@ -8,120 +8,113 @@
 
 [English](README.md) | [日本語](README.ja.md) | [Español](README.es.md) | [Français](README.fr.md)
 
-## ✨ 기능
+## Features
 
-- 🔒 **제로 프라이버시** - WebRTC P2P 직접 전송, 서버는 데이터 저장 안 함
-- 🚀 **초경량** - Rust 백엔드 < 2MB, 프론트엔드는 순수 JavaScript, 프레임워크 불필요
-- 📦 **즉시 사용 가능** - 브라우저에서 열기만 하면 됨, 가입/설치 필요 없음
-- 🌐 **크로스 네트워크** - NAT 트래버설 지원, LAN 제한 없음
-- 🌍 **다국어 지원** - 중국어, 영어, 일본어, 한국어, 스페인어, 프랑스어
-- ⚡ **실시간 진행률** - 256KB 청크 전송, 실시간 진행률 표시
+- 서버 중계 없이 WebRTC로 직접 전송하는 순수 P2P 구조
+- 채팅과 파일 전송을 하나의 세션에 통합
+- 가입 없이, 설치 없이, 브라우저에서 바로 사용 가능
+- 방 코드 또는 공유 링크로 참여하는 2인 전용 흐름
+- `BOOK23` 같은 기억하기 쉬운 6자리 방 코드
+- URL에 `?code=ROOMCODE` 가 남아 새로고침 후에도 같은 방 복원을 시도할 수 있음
+- 최신 브라우저에서 대용량 파일 스트리밍 전송 지원
+- 중국어, 영어, 일본어, 한국어, 스페인어, 프랑스어 UI 제공
 
-## 🚀 빠른 시작
+## Quick Start
 
-### 온라인 사용
+### Online
 
-[0trace.org](https://0trace.org) 접속하여 즉시 파일 전송 시작
+[0trace.org](https://0trace.org) 에 접속하세요.
 
-### 로컬 배포
+### Local Deployment
 
-**방법 1: Docker (권장)**
+**Method 1: Docker**
 
 ```bash
 docker run -d -p 2029:2029 ghcr.io/momo2029/0trace:latest
 ```
 
-http://localhost:2029 접속
+그다음 `http://localhost:2029` 를 엽니다.
 
-**방법 2: 소스에서 빌드**
+**Method 2: Build from Source**
 
 ```bash
-# 저장소 클론
 git clone https://github.com/momo2029/0trace
 cd 0trace
-
-# 실행 (Rust 1.75+ 필요)
-make dev
+./dev.sh
 ```
 
-## 📖 사용 방법
+## How It Works
 
-### 파일 보내기
+1. 한쪽이 방을 생성합니다.
+2. 0trace 가 6자리 방 코드와 공유 링크를 생성합니다.
+3. 다른 한쪽이 링크를 열거나 방 코드를 입력해 참여합니다.
+4. 두 브라우저가 WebRTC 직접 연결을 수립합니다.
+5. 채팅 메시지와 파일이 같은 대화 타임라인에 표시됩니다.
 
-1. [0trace.org](https://0trace.org) 열기
-2. 「파일 보내기」 탭 선택
-3. 파일/폴더 클릭 또는 드래그&드롭
-4. 「링크 복사」 클릭
-5. 링크를 수신자와 공유 (WeChat/QQ/이메일 등)
+페이지를 새로고침해도 URL의 `?code=` 를 통해 같은 브라우저에서 방 복원을 시도할 수 있습니다. 양쪽 모두 나가서 방이 비어 있으면 약 5분 후 자동 만료됩니다.
 
-### 파일 받기
+## Product Positioning
 
-**방법 1: 링크 클릭 (권장)**
-- 수신자가 공유 링크 클릭
-- 자동으로 수신 시작, 수동 조작 불필요
+0trace 는 의도적으로 엄격한 제품입니다.
 
-**방법 2: 수동 입력**
-- 「파일 받기」 탭 선택
-- 6자리 픽업 코드 입력
-- 「방 참여」 클릭
+- 방당 참여자는 2명만 허용
+- 파일 데이터용 TURN 릴레이를 사용하지 않음
+- 서버 측 전송 폴백을 두지 않음
+- 직접 연결이 안 되면 양쪽이 네트워크를 바꿔 다시 시도해야 함
 
-## 🏗️ 아키텍처
+이 선택으로 구조는 단순해지고 파일 내용은 서버에 남지 않습니다. 대신 네트워크 조합에 따라 연결이 실패할 수 있습니다.
 
+## Architecture
+
+```text
+브라우저 A <- WebSocket 시그널링 -> Rust 백엔드 <- WebSocket 시그널링 -> 브라우저 B
+    |                                                                      |
+    +---------------- WebRTC P2P 데이터 채널 (채팅 + 파일) -----------------+
 ```
-발신자 ←── WebSocket 시그널링 ──→ Rust 백엔드 ←── WebSocket 시그널링 ──→ 수신자
-   │                                                                             │
-   └─────────────────────── WebRTC P2P 직접 전송 (파일 데이터) ──────────────┘
-```
 
-**기술 스택:**
-- 백엔드: Rust + Axum + Tokio + WebSocket
-- 프론트엔드: Vanilla JavaScript + WebRTC API
-- 프로토콜: WebRTC DataChannel + 커스텀 전송 프로토콜
+**Tech Stack**
 
-자세한 내용은 [ARCHITECTURE.md](ARCHITECTURE.md) 참조
+- Backend: Rust + Axum + Tokio + WebSocket
+- Frontend: Vanilla JavaScript + WebRTC API + File System Access API
+- Protocol: WebRTC DataChannel + custom message protocol
 
-## 🔒 보안
+자세한 내용은 [ARCHITECTURE.md](ARCHITECTURE.md) 를 참고하세요.
 
-- ✅ WebRTC는 DTLS/SRTP 암호화 내장
-- ✅ 서버 제로 데이터 보관 (시그널링 전용)
-- ✅ 픽업 코드 공간 34^6 ≈ 15억 개
-- ✅ 방은 1시간 후 자동 만료
+## Security And Privacy
 
-## ⚠️ 제한사항
+- 파일 내용은 두 브라우저 사이에서 직접 전송됩니다
+- 서버는 시그널링과 방 관리에만 사용됩니다
+- WebRTC 는 DTLS/SRTP 로 암호화됩니다
+- 방 코드나 공유 링크를 가진 사람은 입장할 수 있으므로 민감 정보로 다뤄야 합니다
+- 비어 있는 방은 약 5분 후 자동 만료됩니다
 
-- 방당 최대 2명 (1발신 + 1수신)
-- 파일 크기는 브라우저 메모리에 제한됨
-- 대칭 NAT에는 TURN 서버 필요 (기본값 미설정)
+## Limitations
 
-## 🛠️ 개발
+- 정확히 2명만 지원
+- 순수 P2P 이므로 일부 NAT 또는 기업망에서는 연결에 실패할 수 있음
+- 직접 연결에 실패하면 네트워크를 바꿔 다시 시도해야 함
+- 대용량 파일 스트리밍은 최신 브라우저 지원에 의존함
 
-[CONTRIBUTING.md](CONTRIBUTING.md) 참조
+## Development
 
 ```bash
-# 개발 모드 (핫 리로드)
 ./dev.sh
-
-# 테스트 실행
 make test
-
-# 프로덕션 빌드
 make build
 ```
 
-## 📝 라이선스
+[CONTRIBUTING.md](CONTRIBUTING.md) 를 참고하세요.
+
+## License
 
 [MIT License](LICENSE)
 
-## 🙏 감사의 글
+## Contributing
 
-## 🤝 기여
+Issue 와 Pull Request 를 환영합니다.
 
-Issue와 Pull Request를 환영합니다!
+## Links
 
-PR을 보내기 전에 [기여 가이드](CONTRIBUTING.md)를 읽어주세요
-
-## 📧 연락처
-
-- 프로젝트 홈페이지: https://github.com/momo2029/0trace
-- 데모 사이트: https://0trace.org
-- 이슈 트래커: https://github.com/momo2029/0trace/issues
+- Demo: https://0trace.org
+- GitHub: https://github.com/momo2029/0trace
+- Issues: https://github.com/momo2029/0trace/issues
