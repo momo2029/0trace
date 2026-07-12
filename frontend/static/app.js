@@ -376,10 +376,16 @@ class WebRTCConnection {
     }
 
     async flushCandidates() {
-        for (const candidate of this.pendingCandidates) {
-            await this.pc.addIceCandidate(candidate);
-        }
+        const candidates = this.pendingCandidates;
         this.pendingCandidates = [];
+        for (const candidate of candidates) {
+            try {
+                await this.pc.addIceCandidate(candidate);
+            } catch (error) {
+                // 单个 candidate 失败不应阻断整条信令链路
+                console.warn('addIceCandidate failed:', error);
+            }
+        }
     }
 
     sendSignal(message) {
@@ -667,8 +673,14 @@ class WebRTCConnection {
 
             send(JSON.stringify({ type: 'chunk-info', id: transferId, index, total: totalChunks }));
 
+            // 背压控制：等 bufferedAmount 降到 bufferLow 以下再发下一块
             if (this.dc.bufferedAmount > bufferHigh) {
                 await new Promise((resolve) => {
+                    // 先判断一次，避免 onbufferedamountlow 已经 fire 过导致永久 hang
+                    if (this.dc.bufferedAmount <= bufferLow) {
+                        resolve();
+                        return;
+                    }
                     this.dc.onbufferedamountlow = () => {
                         this.dc.onbufferedamountlow = null;
                         resolve();

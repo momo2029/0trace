@@ -2,11 +2,16 @@ use axum::extract::ws::{Message, WebSocket};
 use futures_util::{SinkExt, StreamExt};
 use shared::Role;
 use std::collections::HashMap;
+use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Arc;
+use std::time::Duration;
 use tokio::sync::{mpsc, RwLock};
-use tracing::info;
+use tokio::time::{interval, MissedTickBehavior};
+use tracing::{info, warn};
 
 type RelayTx = mpsc::UnboundedSender<Message>;
+
+const IDLE_TIMEOUT_MS: u64 = 70_000;
 
 #[derive(Clone)]
 pub struct RelayManager {
@@ -103,6 +108,10 @@ pub async fn handle_relay(socket: WebSocket, code: String, role: Role, manager: 
         ));
     }
 
+    // 空闲检测
+    let last_activity = Arc::new(AtomicU64::new(now_millis()));
+    let last_activity_hb = Arc::clone(&last_activity);
+
     // 发送任务
     let mut send_task = tokio::spawn(async move {
         while let Some(msg) = rx.recv().await {
@@ -117,6 +126,7 @@ pub async fn handle_relay(socket: WebSocket, code: String, role: Role, manager: 
     let code_clone = code.clone();
     let mut recv_task = tokio::spawn(async move {
         while let Some(Ok(msg)) = ws_rx.next().await {
+            last_activity.store(now_millis(), Ordering::Relaxed);
             // 过滤客户端发来的 relay 控制消息（ping 等），其余全部转发
             if let Message::Text(ref text) = msg {
                 if let Ok(v) = serde_json::from_str::<serde_json::Value>(text) {
@@ -132,9 +142,34 @@ pub async fn handle_relay(socket: WebSocket, code: String, role: Role, manager: 
         }
     });
 
+    // 心跳/超时检测任务
+    let code_hb = code.clone();
+    let mut heartbeat_task = tokio::spawn(async move {
+        let mut ticker = interval(Duration::from_secs(10));
+        ticker.set_missed_tick_behavior(MissedTickBehavior::Delay);
+        loop {
+            ticker.tick().await;
+            let elapsed = now_millis() - last_activity_hb.load(Ordering::Relaxed);
+            if elapsed > IDLE_TIMEOUT_MS {
+                warn!("Relay idle timeout: {} as {:?}", code_hb, role);
+                return;
+            }
+        }
+    });
+
     tokio::select! {
-        _ = &mut send_task => recv_task.abort(),
-        _ = &mut recv_task => send_task.abort(),
+        _ = &mut send_task => {
+            recv_task.abort();
+            heartbeat_task.abort();
+        }
+        _ = &mut recv_task => {
+            send_task.abort();
+            heartbeat_task.abort();
+        }
+        _ = &mut heartbeat_task => {
+            recv_task.abort();
+            send_task.abort();
+        }
     }
 
     manager.leave(&code, role, &tx).await;
@@ -146,6 +181,14 @@ pub async fn handle_relay(socket: WebSocket, code: String, role: Role, manager: 
             serde_json::json!({ "type": "relay-peer-left" }).to_string(),
         ));
     }
+}
+
+/// 单调时钟起点，避免 SystemTime 被 NTP/手动调钟往回拨导致误判
+static MONOTONIC_EPOCH: std::sync::OnceLock<std::time::Instant> = std::sync::OnceLock::new();
+
+fn now_millis() -> u64 {
+    let epoch = MONOTONIC_EPOCH.get_or_init(std::time::Instant::now);
+    epoch.elapsed().as_millis() as u64
 }
 
 #[cfg(test)]
